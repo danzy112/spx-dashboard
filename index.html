@@ -183,6 +183,8 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // Password untuk akses dashboard
+        const APP_PASS = 'spx2026';
         const LS_KEY = 'spx_dashboard_local_entries';
         const SHIFT_MAP = { 'shift 1': 'Shift 1', middle: 'Middle', 'shift 2': 'Shift 2' };
         const WAGE = 245000;
@@ -190,6 +192,19 @@
         let data = null;
         let localEntries = [];
         let pageInterval = null;
+
+        // Check auth
+        function checkAuth(){
+            const auth = sessionStorage.getItem('spx_auth');
+            if(auth === APP_PASS) return true;
+            const pass = prompt('🔒 Password dashboard:');
+            if(pass === APP_PASS){
+                sessionStorage.setItem('spx_auth', pass);
+                return true;
+            }
+            alert('❌ Password salah');
+            return false;
+        }
 
         function showToast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'),1800); }
         function formatRupiah(n){ return 'Rp' + Number(n).toLocaleString('id-ID'); }
@@ -340,7 +355,7 @@
         };
 
         loadLocal();
-        loadPage();
+        if(checkAuth()) loadPage();
     </script>
 </body>
 </html>
