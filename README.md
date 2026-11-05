@@ -15,10 +15,8 @@ Dashboard online untuk monitoring absensi dan gaji kerja SPX warehouse.
 ### 1. Buat Akun GitHub
 
 1. Buka https://github.com/signup
-2. Email: `akuntiktoktes001@gmail.com`
-3. Password: `alfarizi123`
-4. Username: pilih username yang tersedia (contoh: `spxdashboard`)
-5. Verifikasi email
+2. Isi email, password, dan username
+3. Verifikasi email
 
 ### 2. Install GitHub CLI (opsional)
 
