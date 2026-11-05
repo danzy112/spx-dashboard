@@ -1,7 +1,7 @@
 {
-  "updated": "2026-11-05T17:55:21.764876",
-  "total_hari_kerja": 8,
-  "total_upah": 1960000,
+  "updated": "2026-11-06T06:41:46.877840",
+  "total_hari_kerja": 11,
+  "total_upah": 2695000,
   "wage_per_day": 245000,
   "periods": [
     {
@@ -36,9 +36,9 @@
     {
       "gajian": "25 November 2026",
       "gajian_date": "2026-11-25",
-      "hari_kerja": 3,
-      "periode": "2–4 November 2026",
-      "upah": 735000,
+      "hari_kerja": 6,
+      "periode": "2–7 November 2026",
+      "upah": 1470000,
       "detail": [
         {
           "tanggal": "2026-11-02",
@@ -50,6 +50,18 @@
         },
         {
           "tanggal": "2026-11-04",
+          "shift": "middle"
+        },
+        {
+          "tanggal": "2026-11-05",
+          "shift": "middle"
+        },
+        {
+          "tanggal": "2026-11-06",
+          "shift": "middle"
+        },
+        {
+          "tanggal": "2026-11-07",
           "shift": "middle"
         }
       ]
@@ -100,6 +112,24 @@
     },
     {
       "tanggal": "2026-11-04",
+      "shift": "middle",
+      "status": "hadir",
+      "catatan": ""
+    },
+    {
+      "tanggal": "2026-11-05",
+      "shift": "middle",
+      "status": "hadir",
+      "catatan": ""
+    },
+    {
+      "tanggal": "2026-11-06",
+      "shift": "middle",
+      "status": "hadir",
+      "catatan": ""
+    },
+    {
+      "tanggal": "2026-11-07",
       "shift": "middle",
       "status": "hadir",
       "catatan": ""
