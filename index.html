@@ -137,12 +137,12 @@
                     <h2 style="margin-bottom:0;">✏️ Entri Kerja</h2>
                     <span id="localChip" class="chip danger" style="display:none;">0 catatan local</span>
                 </div>
-                <div class="sync-box">
+                <div class="sync-box" style="padding:10px 14px; gap:8px;">
                     <div>
-                        <div class="sync-label">Edit → simpan local → push:</div>
-                        <div class="sync-cmd">cd ~/spx-dashboard && python3 update-data.py && git push origin main</div>
+                        <div class="sync-label" style="font-size:0.78em; margin-bottom:4px;">Sync:</div>
+                        <div class="sync-cmd" style="font-size:0.78em; max-width:240px;">cd ~/spx-dashboard && python3 update-data.py && git push</div>
                     </div>
-                    <button class="btn btn-secondary" id="btnCopySync">⧉ Salin</button>
+                    <button class="btn btn-secondary" id="btnCopySync" style="padding:6px 10px; font-size:0.78em;">Copy</button>
                 </div>
                 <div class="entry-list" id="entryList"></div>
             </div>
