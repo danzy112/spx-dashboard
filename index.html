@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SPX - Rekap Absen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card .value {
+            color: #667eea;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .periods {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .periods h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        
+        .period-item {
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .period-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .period-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .period-gajian {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .period-upah {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .period-info {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .period-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .day-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
+        }
+        
+        .error {
+            background: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            padding: 20px;
+            opacity: 0.9;
+        }
+        
+        .last-updated {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .period-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stat-card .value {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard SPX</h1>
+            <div class="subtitle">Rekap Absensi Kerja</div>
+        </div>
+        
+        <div id="loading" class="loading">Memuat data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Total Hari Kerja</div>
+                    <div class="value" id="totalHari">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Upah</div>
+                    <div class="value" id="totalUpah">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Upah per Hari</div>
+                    <div class="value" id="wagePerDay">-</div>
+                </div>
+            </div>
+            
+            <div class="periods">
+                <h2>Periode Gajian</h2>
+                <div id="periodsList"></div>
+            </div>
+            
+            <div class="footer">
+                <div class="last-updated" id="lastUpdated">-</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function formatRupiah(amount) {
+            return 'Rp' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        function formatDate(dateStr) {
+            const months = {
+                '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
+                '05': 'Mei', '06': 'Jun', '07': 'Jul', '08': 'Agu',
+                '09': 'Sep', '10': 'Okt', '11': 'Nov', '12': 'Des'
+            };
+            const [year, month, day] = dateStr.split('-');
+            return `${parseInt(day)} ${months[month]}`;
+        }
+        
+        function formatDateTime(isoStr) {
+            const d = new Date(isoStr);
+            return d.toLocaleString('id-ID', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error('Gagal memuat data');
+                
+                const data = await response.json();
+                
+                // Update stats
+                document.getElementById('totalHari').textContent = data.total_hari_kerja;
+                document.getElementById('totalUpah').textContent = formatRupiah(data.total_upah);
+                document.getElementById('wagePerDay').textContent = formatRupiah(data.wage_per_day);
+                document.getElementById('lastUpdated').textContent = 
+                    'Terakhir update: ' + formatDateTime(data.updated);
+                
+                // Render periods
+                const periodsList = document.getElementById('periodsList');
+                periodsList.innerHTML = '';
+                
+                data.periods.forEach(period => {
+                    const periodDiv = document.createElement('div');
+                    periodDiv.className = 'period-item';
+                    
+                    const detailBadges = period.detail
+                        .map(d => `<span class="day-badge">${formatDate(d.tanggal)} (${d.shift})</span>`)
+                        .join('');
+                    
+                    periodDiv.innerHTML = `
+                        <div class="period-header">
+                            <div class="period-gajian">📅 Gajian: ${period.gajian}</div>
+                            <div class="period-upah">${formatRupiah(period.upah)}</div>
+                        </div>
+                        <div class="period-info">
+                            <strong>${period.hari_kerja} hari kerja</strong> · ${period.periode}
+                        </div>
+                        <div class="period-details">
+                            ${detailBadges}
+                        </div>
+                    `;
+                    
+                    periodsList.appendChild(periodDiv);
+                });
+                
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 
+                    '❌ Error: ' + err.message + ' - Pastikan file data.json tersedia';
+            }
+        }
+        
+        // Load data on page load
+        loadData();
+        
+        // Auto-refresh every 60 seconds
+        setInterval(loadData, 60000);
+    </script>
+</body>
+</html>
