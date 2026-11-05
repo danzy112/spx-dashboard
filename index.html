@@ -93,6 +93,12 @@
         .footer { text-align: center; color: #555; margin-top: 26px; font-size: 0.8em; }
         .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(40,40,45,0.95); color: #fff; padding: 12px 22px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 200; backdrop-filter: blur(10px); }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .menu-btn { position: fixed; top: 20px; right: 20px; background: rgba(28,28,30,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5em; color: #f5f5f7; z-index: 50; backdrop-filter: blur(12px); transition: background .2s; }
+        .menu-btn:active { background: rgba(40,40,45,0.9); }
+        .menu-dropdown { position: fixed; top: 70px; right: 20px; background: rgba(28,28,30,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 180px; display: none; z-index: 60; backdrop-filter: blur(18px); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .menu-dropdown.show { display: block; }
+        .menu-item { padding: 10px 14px; color: #f5f5f7; cursor: pointer; border-radius: 8px; font-size: 0.9em; transition: background .15s; }
+        .menu-item:hover { background: rgba(255,255,255,0.08); }
         @media (max-width: 720px) {
             .header h1 { font-size: 1.3em; }
             .entry-row { flex-direction: column; align-items: stretch; }
@@ -102,6 +108,11 @@
     </style>
 </head>
 <body>
+    <div class="menu-btn" id="menuBtn">⋮</div>
+    <div class="menu-dropdown" id="menuDropdown">
+        <div class="menu-item" id="menuAddEntry">+ Catat Hari Kerja</div>
+    </div>
+    
     <div class="container">
         <div class="header">
             <h1>📊 Dashboard SPX</h1>
@@ -109,7 +120,7 @@
             <button class="btn btn-primary add-btn" id="btnOpenModal">+ Catat Hari Kerja</button>
         </div>
 
-        <div id="loading" class="loading" style="text-align:center;padding:50px;color:#fff;font-size:1.5em;">Memuat data...</div>
+        <div id="loading" class="loading" style="text-align:center;padding:50px;color:#fff;font-size:1em;">📊 Dashboard SPX<br>Rekap Absensi Kerja<br><div style="margin-top:20px;font-size:0.9em;color:#888;">⏳ Loading...</div></div>
         <div id="error" class="error" style="display:none;"></div>
         <div id="content" style="display:none;">
             <div class="stats-grid">
@@ -282,15 +293,17 @@
             document.getElementById('modalBackdrop').classList.add('show');
         };
 
-        window.deleteEntry = function(tanggal){
-            const idx = localEntries.findIndex(e=>e.tanggal===tanggal);
-            if(idx>=0){ localEntries[idx]._deleted = true; }
-            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));
-            document.getElementById('localChip').style.display = (localEntries.filter(x=>!x._deleted).length ? 'inline-block' : 'none');
-            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';
-            render();
-            showToast('Hapus '+tanggal);
-            return false;
+        window.deleteEntry = function(tanggal){\
+            if(!confirm('Hapus '+tanggal+'?')) return false;\
+            const idx = localEntries.findIndex(e=>e.tanggal===tanggal);\
+            if(idx>=0){ localEntries[idx]._deleted = true; }\
+            else { localEntries.push({ tanggal, shift: '', status: '', catatan: '', _deleted: true, modifiedAt: Date.now() }); }\
+            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));\
+            document.getElementById('localChip').style.display = (localEntries.filter(x=>!x._deleted).length ? 'inline-block' : 'none');\
+            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';\
+            render();\
+            showToast('Dihapus: '+tanggal);\
+            return false;\
         };
 
         function openModal(){
@@ -340,6 +353,14 @@
         document.getElementById('btnOpenModal').onclick = openModal;
         document.getElementById('btnCancel').onclick = closeModal;
         document.getElementById('btnSave').onclick = saveEntry;
+        
+        // Menu button
+        const menuBtn = document.getElementById('menuBtn');
+        const menuDropdown = document.getElementById('menuDropdown');
+        menuBtn.onclick = e=> { e.stopPropagation(); menuDropdown.classList.toggle('show'); };
+        document.getElementById('menuAddEntry').onclick = ()=> { menuDropdown.classList.remove('show'); openModal(); };
+        document.onclick = ()=> menuDropdown.classList.remove('show');
+        
         document.getElementById('modalBackdrop').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal(); });
         document.querySelectorAll('.radio-row label').forEach(l=> {
             l.addEventListener('click', e=> {
