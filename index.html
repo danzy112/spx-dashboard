@@ -2,381 +2,1020 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard SPX - Rekap Absen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SPX Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(160deg, #1c1c1e 0%, #121214 45%, #0b0b0d 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1d 50%, #0f0f0f 100%);
             color: #f5f5f7;
-            min-height: 100vh;
-            padding: 24px 16px 60px;
+            overflow: hidden;
         }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header {
-            background: rgba(28, 28, 30, 0.55);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 22px;
-            padding: 30px 32px;
-            margin-bottom: 24px;
-            text-align: center;
+
+        .app-wrapper { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 280px; background: rgba(20,20,25,0.95); border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; padding: 20px 0; display: none; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        @media (min-width: 1024px) {
+            .sidebar { display: block; }
+            .bottom-nav { display: none; }
         }
-        .header h1 {
-            font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em;
-            background: linear-gradient(90deg, #ffffff, #b8c0e0);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        .header .subtitle { margin-top: 6px; color: #888; font-size: 1.05em; }
-        .add-btn { margin-top: 14px; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px; margin-bottom: 20px;
-        }
-        .stat-card {
-            background: rgba(28, 28, 30, 0.65);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 18px; padding: 22px 18px; text-align: center;
-        }
-        .stat-label { color: #8a8a92; font-size: 0.78em; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-        .stat-value { color: #fff; font-size: 2.1em; font-weight: 700; letter-spacing: -0.02em; }
-        .stat-value small { display: block; color: #6a6a72; font-size: 0.8em; margin-top: 4px; font-weight: 500; }
-        .section {
-            background: rgba(28, 28, 30, 0.55);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 18px; padding: 28px;
-        }
-        .section h2 { color: #f5f5f7; font-size: 1.3em; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .section-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .chip { display: inline-block; background: rgba(10, 132, 255, 0.15); color: #5ab4ff; border: 1px solid rgba(10, 132, 255, 0.25); padding: 5px 12px; border-radius: 20px; font-size: 0.72em; font-weight: 600; letter-spacing: 0.5px; }
-        .chip.danger { background: rgba(255, 82, 82, 0.15); color: #ff7b7b; border-color: rgba(255, 82, 82, 0.25); }
-        .period-item { border-left: 3px solid #0a84ff; padding: 18px 20px; margin-bottom: 14px; background: rgba(255, 255, 255, 0.025); border-radius: 12px; }
-        .period-item:last-child { margin-bottom: 0; }
-        .period-gajian { font-size: 1.15em; font-weight: 600; color: #5ab4ff; }
-        .period-upah { font-size: 1.4em; font-weight: 700; color: #32d74b; }
-        .period-info { color: #888; margin: 8px 0 12px; font-size: 0.95em; }
-        .day-badge { background: #0a84ff; color: #fff; padding: 4px 11px; border-radius: 18px; font-size: 0.8em; font-weight: 500; display: inline-block; margin: 3px 5px 3px 0; }
-        .day-badge.local { background: #f5a623; }
-        .entry-list { display: flex; flex-direction: column; gap: 8px; max-height: 430px; overflow-y: auto; padding-right: 6px; }
-        .entry-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 10px 14px; }
-        .entry-date { color: #e0e0e4; font-weight: 600; font-size: 0.95em; white-space: nowrap; }
-        .entry-meta { display: flex; align-items: center; gap: 8px; }
-        .inline-select { background: rgba(255,255,255,0.06); color: #f5f5f7; border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 5px 8px; font-size: 0.85em; outline: none; }
-        .btn { cursor: pointer; border: none; border-radius: 9px; font-family: inherit; font-size: 0.85em; font-weight: 600; padding: 8px 14px; transition: transform .15s, opacity .15s, background .15s; }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: rgba(10, 132, 255, 0.9); color: #fff; }
-        .btn-secondary { background: rgba(255,255,255,0.08); color: #e0e0e4; border: 1px solid rgba(255,255,255,0.12); }
-        .btn-ghost { background: transparent; color: #888; padding: 6px 10px; font-size: 0.85em; }
-        .btn-ghost:hover { color: #bbb; background: rgba(255,255,255,0.06); }
-        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; }
-        .modal-backdrop.show { display: flex; }
-        .modal { background: rgba(28, 28, 30, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 26px 28px 22px; width: min(460px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-        .modal h3 { color: #fff; font-size: 1.2em; margin-bottom: 16px; }
+
+        .navbar { background: rgba(20,20,25,0.95); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-title { font-size: 1.2em; font-weight: 700; }
+        .navbar-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        .content-area { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        
+        @media (min-width: 1024px) { .content-area { padding-bottom: 20px; } }
+
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Sidebar Navigation */
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav li { margin: 0; }
+        .sidebar-nav button { width: 100%; text-align: left; background: none; border: none; color: #f5f5f7; padding: 14px 20px; cursor: pointer; font-size: 0.95em; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-nav button:hover { background: rgba(255,255,255,0.08); }
+        .sidebar-nav button.active { background: rgba(10,132,255,0.15); border-left-color: #0a84ff; color: #0a84ff; font-weight: 600; }
+
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,25,0.98); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 8px 0 20px; z-index: 100; }
+        .nav-btn { background: none; border: none; color: #8a8a92; cursor: pointer; padding: 8px 16px; font-size: 0.8em; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.2s; }
+        .nav-btn.active { color: #0a84ff; }
+        .nav-icon { font-size: 1.5em; }
+
+        /* Cards & Layout */
+        .card { background: rgba(28,28,30,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(12px); }
+        .card.stat { text-align: center; }
+        .stat-label { color: #888; font-size: 0.85em; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8em; font-weight: 700; color: #0a84ff; }
+        .stat-sub { color: #666; font-size: 0.8em; margin-top: 4px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+
+        /* Forms */
         .form-group { margin-bottom: 16px; }
-        .form-label { display: block; color: #9a9aa2; font-size: 0.82em; margin-bottom: 6px; font-weight: 600; }
-        .form-input, .form-select { width: 100%; background: rgba(255,255,255,0.05); color: #f5f5f7; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; font-size: 0.95em; font-family: inherit; outline: none; }
+        .form-label { display: block; color: #9a9a9f; font-size: 0.85em; margin-bottom: 6px; font-weight: 600; }
+        .form-input, .form-select { width: 100%; background: rgba(255,255,255,0.05); color: #f5f5f7; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; font-size: 1em; font-family: inherit; outline: none; transition: border 0.2s; }
         .form-input:focus, .form-select:focus { border-color: #0a84ff; }
-        .radio-row { display: flex; gap: 6px; }
-        .radio-row label { flex: 1; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 6px; font-size: 0.85em; cursor: pointer; color: #ccc; font-weight: 600; transition: all .15s; }
-        .radio-row input { display: none; }
-        .radio-row label.active { background: rgba(10, 132, 255, 0.25); border-color: #0a84ff; color: #fff; }
-        .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
-        .sync-box { background: rgba(255, 196, 0, 0.08); border: 1px dashed rgba(255, 196, 0, 0.3); border-radius: 14px; padding: 14px 18px; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-        .sync-box .sync-label { color: #ffcf6a; font-size: 0.9em; font-weight: 600; margin-bottom: 6px; }
-        .sync-cmd { background: rgba(0,0,0,0.45); color: #f5f5f7; border-radius: 8px; padding: 8px 12px; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 0.85em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; max-width: 100%; }
-        .sync-note { color: #8a8a92; font-size: 0.8em; margin-top: 8px; }
-        .footer { text-align: center; color: #555; margin-top: 26px; font-size: 0.8em; }
-        .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(40,40,45,0.95); color: #fff; padding: 12px 22px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 200; backdrop-filter: blur(10px); }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .menu-btn { position: fixed; top: 20px; right: 20px; background: rgba(28,28,30,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5em; color: #f5f5f7; z-index: 50; backdrop-filter: blur(12px); transition: background .2s; }
-        .menu-btn:active { background: rgba(40,40,45,0.9); }
-        .menu-dropdown { position: fixed; top: 70px; right: 20px; background: rgba(28,28,30,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 180px; display: none; z-index: 60; backdrop-filter: blur(18px); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        .menu-dropdown.show { display: block; }
-        .menu-item { padding: 10px 14px; color: #f5f5f7; cursor: pointer; border-radius: 8px; font-size: 0.9em; transition: background .15s; }
-        .menu-item:hover { background: rgba(255,255,255,0.08); }
+        .form-error { color: #ff5555; font-size: 0.8em; margin-top: 4px; }
+
+        .btn { cursor: pointer; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 600; font-size: 0.95em; font-family: inherit; transition: all 0.2s; }
+        .btn-primary { background: #0a84ff; color: #fff; }
+        .btn-primary:active { transform: scale(0.96); opacity: 0.8; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #f5f5f7; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-secondary:active { background: rgba(255,255,255,0.15); }
+        .btn-danger { background: rgba(255,85,85,0.15); color: #ff7b7b; border: 1px solid rgba(255,85,85,0.3); }
+        .btn-small { padding: 8px 12px; font-size: 0.8em; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .btn-group .btn { flex: 1; }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 200; }
+        .modal-backdrop.show { display: flex; }
+        .modal { background: rgba(28,28,30,0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { font-size: 1.3em; font-weight: 700; margin-bottom: 20px; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #888; font-size: 1.5em; cursor: pointer; }
+
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: rgba(255,255,255,0.05); padding: 12px; text-align: left; font-size: 0.85em; color: #888; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* Notifications */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(40,40,45,0.95); color: #fff; padding: 12px 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 300; backdrop-filter: blur(10px); }
+        .toast.show { opacity: 1; }
+
         @media (max-width: 720px) {
-            .header h1 { font-size: 1.3em; }
-            .entry-row { flex-direction: column; align-items: stretch; }
-            .entry-meta { width: 100%; justify-content: space-between; }
-            .stat-value { font-size: 1.7em; }
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .sidebar { display: none; }
+            .content-area { padding-bottom: 100px; }
+            .modal { border-radius: 16px; margin: 16px; max-width: calc(100% - 32px); }
         }
+
+        .hidden { display: none; }
+        .separator { height: 1px; background: rgba(255,255,255,0.05); margin: 16px 0; }
+
+        .header-time { display: flex; align-items: center; gap: 12px; }
+        .time-box { text-align: right; }
+        .time-digital { font-size: 1.1em; font-weight: 600; font-family: 'Courier New', monospace; }
+        .time-date { font-size: 0.8em; color: #888; }
+
+        .profile-card { display: flex; align-items: center; gap: 12px; padding: 16px; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #5ab4ff); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+        .chart-container { position: relative; height: 300px; margin-bottom: 16px; }
+
+        .footer { text-align: center; color: #555; font-size: 0.75em; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px; }
     </style>
 </head>
 <body>
-    <div class="menu-btn" id="menuBtn">⋮</div>
-    <div class="menu-dropdown" id="menuDropdown">
-        <div class="menu-item" id="menuAddEntry">+ Catat Hari Kerja</div>
-    </div>
-    
-    <div class="container">
-        <div class="header">
-            <h1>📊 Dashboard SPX</h1>
-            <div class="subtitle">Rekap Absensi Kerja</div>
-            <button class="btn btn-primary add-btn" id="btnOpenModal">+ Catat Hari Kerja</button>
-        </div>
-
-        <div id="loading" class="loading" style="text-align:center;padding:50px;color:#fff;font-size:1em;">📊 Dashboard SPX<br>Rekap Absensi Kerja<br><div style="margin-top:20px;font-size:0.9em;color:#888;">⏳ Loading...</div></div>
-        <div id="error" class="error" style="display:none;"></div>
-        <div id="content" style="display:none;">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Hari Kerja</div>
-                    <div class="stat-value" id="totalHari">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Upah</div>
-                    <div class="stat-value" id="totalUpah">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Upah per Hari</div>
-                    <div class="stat-value" id="wagePerDay">-</div>
-                </div>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="sidebar">
+            <div style="padding: 0 20px; margin-bottom: 20px;">
+                <div style="font-weight: 700; font-size: 1.1em;">📊 SPX</div>
             </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><button class="nav-link active" data-page="home">🏠 Home</button></li>
+                    <li><button class="nav-link" data-page="absensi">📋 Absensi</button></li>
+                    <li><button class="nav-link" data-page="tambah">➕ Tambah Kerja</button></li>
+                    <li><button class="nav-link" data-page="penggajian">💰 Penggajian</button></li>
+                    <li><button class="nav-link" data-page="pengaturan">⚙️ Pengaturan</button></li>
+                    <li style="margin-top: 20px;"><button class="nav-link" data-page="login">🚪 Logout</button></li>
+                </ul>
+            </nav>
+        </aside>
 
-            <div class="section">
-                <h2>📅 Periode Gajian</h2>
-                <div id="periodsList"></div>
-            </div>
-
-            <div class="section" style="margin-top:20px;">
-                <div class="section-title-row">
-                    <h2 style="margin-bottom:0;">✏️ Entri Kerja</h2>
-                    <span id="localChip" class="chip danger" style="display:none;">0 catatan local</span>
-                </div>
-                <div class="sync-box" style="padding:10px 14px; gap:8px;">
-                    <div>
-                        <div class="sync-label" style="font-size:0.78em; margin-bottom:4px;">Sync:</div>
-                        <div class="sync-cmd" style="font-size:0.78em; max-width:240px;">cd ~/spx-dashboard && python3 update-data.py && git push</div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navbar -->
+            <div class="navbar">
+                <div class="navbar-title" id="navbarTitle">Dashboard</div>
+                <div class="header-time">
+                    <div class="time-box">
+                        <div class="time-digital" id="currentTime">00:00:00</div>
+                        <div class="time-date" id="currentDate">-</div>
                     </div>
-                    <button class="btn btn-secondary" id="btnCopySync" style="padding:6px 10px; font-size:0.78em;">Copy</button>
                 </div>
-                <div class="entry-list" id="entryList"></div>
             </div>
 
-            <div class="footer">Generated by update-data.py · Auto-sync cron every 30 min &nbsp;|&nbsp; your daily wage: Rp<span id="wageSpan">245.000</span> · made with ❤️ by andzyy</div>
+            <!-- Content Pages -->
+            <div class="content-area">
+                <!-- HOME PAGE -->
+                <div class="page active" id="home">
+                    <div class="profile-card">
+                        <div class="avatar" id="avatarUser">D</div>
+                        <div>
+                            <div style="font-weight: 600;" id="greetingText">Selamat Datang</div>
+                            <div style="color: #888; font-size: 0.9em;" id="userName">Karyawan SPX</div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card stat">
+                            <div class="stat-label">Hari Kerja</div>
+                            <div class="stat-value" id="statHari">0</div>
+                            <div class="stat-sub">hari</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Total Upah</div>
+                            <div class="stat-value" style="font-size: 1.4em;" id="statUpah">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Shift 1</div>
+                            <div class="stat-value" id="statShift1">0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Shift M</div>
+                            <div class="stat-value" id="statShiftM">0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Shift 2</div>
+                            <div class="stat-value" id="statShift2">0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Bulan Ini</div>
+                            <div class="stat-value" id="statBulanIni">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Penggajian Info -->
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">💳 Periode Gajian Berjalan</div>
+                        <div style="color: #888; font-size: 0.9em; margin-bottom: 8px;" id="periodInfo">-</div>
+                        <div style="background: rgba(10,132,255,0.1); border-left: 3px solid #0a84ff; padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; margin-bottom: 8px;">Upah: <strong id="periodUpah">Rp0</strong></div>
+                            <div style="font-size: 0.9em; margin-bottom: 8px;">Hari kerja: <strong id="periodDays">0</strong> hari</div>
+                            <div style="font-size: 0.9em;">Dibayar: <strong id="periodPayDate">-</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">📈 Absensi Per Bulan</div>
+                        <div class="chart-container">
+                            <canvas id="chartAbsensi"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">🔄 Distribusi Shift</div>
+                        <div class="chart-container">
+                            <canvas id="chartShift"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="btnQuickAddAbsensi">➕ Catat Kerja</button>
+                        <button class="btn btn-secondary" id="btnViewAbsensi">📋 Lihat Absensi</button>
+                    </div>
+                </div>
+
+                <!-- ABSENSI PAGE -->
+                <div class="page" id="absensi">
+                    <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+                        <input type="month" id="filterMonth" class="form-input" style="flex: 1;">
+                        <select id="filterShift" class="form-select" style="flex: 1;">
+                            <option value="">Semua Shift</option>
+                            <option value="shift 1">Shift 1</option>
+                            <option value="middle">Shift Middle</option>
+                            <option value="shift 2">Shift 2</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Hari</th>
+                                    <th>Shift</th>
+                                    <th>Upah</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absensiTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: center; color: #888; padding: 20px;" id="absensiEmpty">Belum ada data absensi</div>
+                </div>
+
+                <!-- TAMBAH KERJA PAGE -->
+                <div class="page" id="tambah">
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Kerja</label>
+                        <input type="date" id="inputTanggal" class="form-input">
+                        <div class="form-error" id="errTanggal"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Shift</label>
+                        <select id="inputShift" class="form-select">
+                            <option value="">Pilih Shift</option>
+                            <option value="shift 1">Shift 1</option>
+                            <option value="middle">Shift Middle</option>
+                            <option value="shift 2">Shift 2</option>
+                        </select>
+                        <div class="form-error" id="errShift"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upah (Rp)</label>
+                        <input type="number" id="inputUpah" class="form-input" value="245000">
+                        <div class="form-error" id="errUpah"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Catatan (opsional)</label>
+                        <textarea id="inputCatatan" class="form-input" rows="3"></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="btnSimpanAbsensi">💾 Simpan</button>
+                        <button class="btn btn-secondary" id="btnBatalAbsensi">Batal</button>
+                    </div>
+                </div>
+
+                <!-- PENGGAJIAN PAGE -->
+                <div class="page" id="penggajian">
+                    <div id="penggajianContainer">
+                    </div>
+                </div>
+
+                <!-- PENGATURAN PAGE -->
+                <div class="page" id="pengaturan">
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 16px;">👤 Profil Karyawan</div>
+                        <div class="form-group">
+                            <label class="form-label">Nama Karyawan</label>
+                            <input type="text" id="settingNama" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">STAFF ID</label>
+                            <input type="text" id="settingStaffId" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Upah Harian (Rp)</label>
+                            <input type="number" id="settingUpah" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" id="btnSimpanProfil" style="width: 100%;">💾 Simpan Profil</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 16px;">🎨 Pengaturan Aplikasi</div>
+                        <div class="form-group">
+                            <label class="form-label">Mode Gelap</label>
+                            <select id="settingDarkMode" class="form-select">
+                                <option value="true">Aktif (Rekomendasi)</option>
+                                <option value="false">Nonaktif</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Format Tanggal</label>
+                            <select id="settingFormatTgl" class="form-select">
+                                <option value="dd-mm-yyyy">DD-MM-YYYY</option>
+                                <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 16px;">💾 Data</div>
+                        <button class="btn btn-secondary" id="btnExportData" style="width: 100%; margin-bottom: 8px;">📥 Export CSV</button>
+                        <button class="btn btn-secondary" id="btnBackupData" style="width: 100%; margin-bottom: 8px;">💾 Backup Data</button>
+                        <button class="btn btn-secondary" id="btnRestoreData" style="width: 100%; margin-bottom: 8px;">📂 Restore Data</button>
+                        <button class="btn btn-danger" id="btnResetData" style="width: 100%;">🗑️ Reset Semua Data</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 8px;">ℹ️ Informasi Aplikasi</div>
+                        <div style="color: #888; font-size: 0.85em;">
+                            <div>SPX Dashboard v2.0.0</div>
+                            <div>© 2026 DANZYYY. All Rights Reserved.</div>
+                            <div style="margin-top: 8px;">Personal Attendance Management System</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOGIN PAGE -->
+                <div class="page" id="login">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 3em; margin-bottom: 20px;">📊</div>
+                        <div style="font-size: 1.5em; font-weight: 700; margin-bottom: 30px;">SPX DASHBOARD</div>
+                        
+                        <div style="max-width: 400px; margin: 0 auto;">
+                            <div class="form-group">
+                                <label class="form-label">STAFF ID</label>
+                                <input type="text" id="loginStaffId" class="form-input" placeholder="Masukkan STAFF ID">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" id="loginPassword" class="form-input" placeholder="Masukkan Password">
+                            </div>
+                            <button class="btn btn-primary" id="btnLogin" style="width: 100%; margin-bottom: 12px;">🚀 Login</button>
+                            
+                            <div style="color: #888; font-size: 0.85em; margin-top: 20px;">
+                                <div>Demo Credentials:</div>
+                                <div>STAFF ID: <strong>SPX001</strong></div>
+                                <div>Password: <strong>password</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="footer">
+                    <div>© 2026 DANZYYY. All Rights Reserved.</div>
+                    <div style="margin-top: 4px;">SPX DASHBOARD — Personal Attendance Management System</div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation (Mobile) -->
+            <div class="bottom-nav">
+                <button class="nav-btn active" data-page="home">
+                    <div class="nav-icon">🏠</div>
+                    <div>Home</div>
+                </button>
+                <button class="nav-btn" data-page="absensi">
+                    <div class="nav-icon">📋</div>
+                    <div>Absensi</div>
+                </button>
+                <button class="nav-btn" data-page="tambah">
+                    <div class="nav-icon">➕</div>
+                    <div>Tambah</div>
+                </button>
+                <button class="nav-btn" data-page="penggajian">
+                    <div class="nav-icon">💰</div>
+                    <div>Gajian</div>
+                </button>
+                <button class="nav-btn" data-page="pengaturan">
+                    <div class="nav-icon">⚙️</div>
+                    <div>Atur</div>
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="modal-backdrop" id="modalBackdrop">
+    <!-- Modal untuk edit absensi -->
+    <div class="modal-backdrop" id="modalEditAbsensi">
         <div class="modal">
-            <h3>📝 Catat hari kerja</h3>
+            <button class="modal-close" onclick="closeModal('modalEditAbsensi')">×</button>
+            <div class="modal-header">✏️ Edit Absensi</div>
             <div class="form-group">
-                <label class="form-label">Tanggal kerja</label>
-                <input type="date" class="form-input" id="inputDate">
+                <label class="form-label">Tanggal Kerja</label>
+                <input type="date" id="editTanggal" class="form-input">
             </div>
             <div class="form-group">
                 <label class="form-label">Shift</label>
-                <div class="radio-row">
-                    <label><input type="radio" name="shift" value="shift 1"> Shift 1</label>
-                    <label><input type="radio" name="shift" value="middle"> Middle</label>
-                    <label><input type="radio" name="shift" value="shift 2"> Shift 2</label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Status</label>
-                <select class="form-select" id="inputStatus">
-                    <option value="hadir">Hadir</option>
-                    <option value="pulang">Pulang</option>
+                <select id="editShift" class="form-select">
+                    <option value="shift 1">Shift 1</option>
+                    <option value="middle">Shift Middle</option>
+                    <option value="shift 2">Shift 2</option>
                 </select>
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-ghost" id="btnCancel">Cancel</button>
-                <button class="btn btn-primary" id="btnSave">Simpan</button>
+            <div class="form-group">
+                <label class="form-label">Upah (Rp)</label>
+                <input type="number" id="editUpah" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Catatan</label>
+                <textarea id="editCatatan" class="form-input" rows="3"></textarea>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnSimpanEdit">💾 Simpan</button>
+                <button class="btn btn-secondary" onclick="closeModal('modalEditAbsensi')">Batal</button>
             </div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
     <script>
-        // Password untuk akses dashboard
-        const APP_PASS = 'spx2026';
-        const LS_KEY = 'spx_dashboard_local_entries';
-        const SHIFT_MAP = { 'shift 1': 'Shift 1', middle: 'Middle', 'shift 2': 'Shift 2' };
-        const WAGE = 245000;
+        // ============= DATA MANAGEMENT =============
+        const DB_ABSENSI = 'spx_absensi';
+        const DB_USER = 'spx_user';
+        const DB_SETTINGS = 'spx_settings';
+        const WAGE_DEFAULT = 245000;
 
-        let data = null;
-        let localEntries = [];
-        let pageInterval = null;
-
-        // Check auth
-        function checkAuth(){
-            const auth = sessionStorage.getItem('spx_auth');
-            if(auth === APP_PASS) return true;
-            const pass = prompt('🔒 Password dashboard:');
-            if(pass === APP_PASS){
-                sessionStorage.setItem('spx_auth', pass);
-                return true;
+        // Init data jika belum ada
+        function initData() {
+            if (!localStorage.getItem(DB_ABSENSI)) {
+                const initialData = [
+                    { tanggal: '2026-10-25', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-10-26', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-10-27', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-10-28', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-10-29', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-11-02', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-11-03', shift: 'middle', upah: 245000, catatan: '' },
+                    { tanggal: '2026-11-04', shift: 'middle', upah: 245000, catatan: '' },
+                ];
+                localStorage.setItem(DB_ABSENSI, JSON.stringify(initialData));
             }
-            alert('❌ Password salah');
-            return false;
-        }
-
-        function showToast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'),1800); }
-        function formatRupiah(n){ return 'Rp' + Number(n).toLocaleString('id-ID'); }
-
-        function loadLocal(){ try { const raw = localStorage.getItem(LS_KEY); localEntries = raw ? JSON.parse(raw) : []; } catch(e){ localEntries = []; } }
-
-        function computeFinal(){
-            const byDate = {};
-            (data.all_entries||[]).forEach(e=> { byDate[e.tanggal] = { ...e }; });
-            (localEntries||[]).forEach(e=> {
-                if(e._deleted) return;
-                const c = byDate[e.tanggal];
-                if(c) Object.assign(c, e); else byDate[e.tanggal] = { ...e };
-            });
-            const out = Object.values(byDate);
-            out.sort((a,b)=>a.tanggal<b.tanggal?-1:1);
-            return out;
-        }
-
-        function render(){
-            const merged = computeFinal();
-            const present = merged.filter(x=>x.status==='hadir').length;
-            const upah = present * WAGE;
-            document.getElementById('totalHari').textContent = present;
-            document.getElementById('totalUpah').textContent = formatRupiah(upah);
-            document.getElementById('wagePerDay').textContent = formatRupiah(WAGE);
-            document.getElementById('wageSpan').textContent = WAGE.toLocaleString('id-ID');
-
-            const periodsList = document.getElementById('periodsList');
-            periodsList.innerHTML = '';
-            (data.periods||[]).forEach(p=>{
-                const wrap = document.createElement('div');
-                wrap.innerHTML = `<div class="period-item">
-                    <div class="period-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                        <div class="period-gajian">📅 Gajian: ${p.gajian}</div>
-                        <div class="period-upah">${formatRupiah(p.upah)}</div>
-                    </div>
-                    <div class="period-info"><strong>${p.hari_kerja} hari kerja</strong> · ${p.periode}</div>
-                    <div class="period-details">${(p.detail||[]).map(d=>`<span class="day-badge">${d.tanggal.slice(5)} (${SHIFT_MAP[d.shift]||d.shift})</span>`).join('')}</div>
-                </div>`;
-                periodsList.appendChild(wrap);
-            });
-
-            const entryList = document.getElementById('entryList');
-            entryList.innerHTML = '';
-            merged.forEach(e=>{
-                const isLocal = (localEntries||[]).some(le=>le.tanggal===e.tanggal && (le.shift||'')===e.shift && !le._deleted);
-                const dateLabel = e.tanggal;
-                const statusBadge = e.status==='pulang' ? '<span class="day-badge" style="background:#7a7a82;">pulang</span>'
-                                    : `<span class="day-badge">${SHIFT_MAP[e.shift]||e.shift}</span>`;
-                const rowHtml = `<div class="entry-row">
-                    <div class="entry-date">${dateLabel} ${isLocal?'<span class="day-badge local">local</span>':''}</div>
-                    <div class="entry-meta">
-                        ${statusBadge}
-                        <span style="flex:1;"></span>
-                        <button class="btn btn-ghost menu-dot" onclick="editEntry('${e.tanggal}')">•</button>
-                        <button class="btn btn-ghost" onclick="deleteEntry('${e.tanggal}')">✕</button>
-                    </div>
-                </div>`;
-                entryList.insertAdjacentHTML('beforeend', rowHtml);
-            });
-
-            const chip = document.getElementById('localChip');
-            chip.style.display = (localEntries||[]).filter(x=>!x._deleted).length ? 'inline-block' : 'none';
-            chip.textContent = (localEntries||[]).filter(x=>!x._deleted).length + ' catatan local';
-        }
-
-        window.editEntry = function(tanggal){
-            document.getElementById('inputDate').value = tanggal;
-            const e = computeFinal().find(x=>x.tanggal===tanggal);
-            const sel = document.querySelector(`input[name="shift"][value="${e?e.shift:''}"]`);
-            if(sel) sel.checked = true; if(sel) sel.parentElement.classList.add('active');
-            const st = document.getElementById('inputStatus');
-            if(e && st) { st.value = e.status || 'hadir'; }
-            document.getElementById('modalBackdrop').classList.add('show');
-        };
-
-        window.deleteEntry = function(tanggal){
-            if(!confirm('Hapus '+tanggal+'?')) return false;
-            const idx = localEntries.findIndex(e=>e.tanggal===tanggal);
-            if(idx>=0){ localEntries[idx]._deleted = true; }
-            else { localEntries.push({ tanggal, shift: '', status: '', catatan: '', _deleted: true, modifiedAt: Date.now() }); }
-            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));
-            document.getElementById('localChip').style.display = (localEntries.filter(x=>!x._deleted).length ? 'inline-block' : 'none');
-            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';
-            render();
-            showToast('Dihapus: '+tanggal);
-            return false;
-        };
-
-        function openModal(){
-            document.getElementById('inputDate').value = new Date().toISOString().slice(0,10);
-            document.querySelectorAll('.radio-row label').forEach(l=>l.classList.remove('active'));
-            document.getElementById('inputStatus').value = 'hadir';
-            document.getElementById('modalBackdrop').classList.add('show');
-        }
-        function closeModal(){ document.getElementById('modalBackdrop').classList.remove('show'); }
-        function saveEntry(){
-            const d = document.getElementById('inputDate').value;
-            if(!d) return showToast('Isi tanggal dulu');
-            const s = document.querySelector('input[name="shift"]:checked')?.value || 'middle';
-            const st = document.getElementById('inputStatus')?.value || 'hadir';
-            const existing = localEntries.find(e=>e.tanggal===d);
-            if(existing){ Object.assign(existing, { shift: s, status: st, modifiedAt: Date.now(), _deleted: false }); }
-            else { localEntries.push({ tanggal: d, shift: s, status: st, modifiedAt: Date.now(), catatan: '', _deleted: false }); }
-            localEntries.sort((a,b)=>a.tanggal<b.tanggal?-1:1);
-            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));
-            document.getElementById('localChip').style.display = 'inline-block';
-            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';
-            closeModal();
-            render();
-            showToast('Disimpan local');
-        }
-
-        async function loadPage(){
-            if(pageInterval) clearInterval(pageInterval);
-            const loading = document.getElementById('loading');
-            const errorBox = document.getElementById('error');
-            const content = document.getElementById('content');
-            loading.style.display = 'block'; errorBox.style.display='none'; content.style.display='none';
-            try {
-                const r = await fetch('data.json');
-                if(!r.ok) throw new Error('HTTP ' + r.status);
-                data = await r.json();
-                render();
-                content.style.display='block';
-                pageInterval = setInterval(loadPage, 60000);
-            } catch(err){
-                loading.style.display = 'block';
-                errorBox.style.display='block';
-                errorBox.textContent = '❌ Error: ' + err.message + ' — pastikan ~/spx-absen.log dan data.json ada';
+            if (!localStorage.getItem(DB_USER)) {
+                localStorage.setItem(DB_USER, JSON.stringify({
+                    staffId: 'SPX001',
+                    nama: 'Karyawan SPX',
+                    isLoggedIn: false
+                }));
+            }
+            if (!localStorage.getItem(DB_SETTINGS)) {
+                localStorage.setItem(DB_SETTINGS, JSON.stringify({
+                    darkMode: true,
+                    formatTgl: 'dd-mm-yyyy',
+                    upahDefault: WAGE_DEFAULT
+                }));
             }
         }
 
-        document.getElementById('btnOpenModal').onclick = openModal;
-        document.getElementById('btnCancel').onclick = closeModal;
-        document.getElementById('btnSave').onclick = saveEntry;
-        
-        // Menu button
-        const menuBtn = document.getElementById('menuBtn');
-        const menuDropdown = document.getElementById('menuDropdown');
-        menuBtn.onclick = e=> { e.stopPropagation(); menuDropdown.classList.toggle('show'); };
-        document.getElementById('menuAddEntry').onclick = ()=> { menuDropdown.classList.remove('show'); openModal(); };
-        document.onclick = ()=> menuDropdown.classList.remove('show');
-        
-        document.getElementById('modalBackdrop').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal(); });
-        document.querySelectorAll('.radio-row label').forEach(l=> {
-            l.addEventListener('click', e=> {
-                const inputs = l.parentElement.querySelectorAll('input[name="shift"]');
-                inputs.forEach(i=>i.checked = i === l.querySelector('input'));
-                l.parentElement.querySelectorAll('label').forEach(el=>el.classList.remove('active'));
-                l.classList.add('active');
+        function getAbsensi() { return JSON.parse(localStorage.getItem(DB_ABSENSI)) || []; }
+        function setAbsensi(data) { localStorage.setItem(DB_ABSENSI, JSON.stringify(data)); }
+        function getUser() { return JSON.parse(localStorage.getItem(DB_USER)) || {}; }
+        function setUser(data) { localStorage.setItem(DB_USER, JSON.stringify(data)); }
+        function getSettings() { return JSON.parse(localStorage.getItem(DB_SETTINGS)) || {}; }
+        function setSettings(data) { localStorage.setItem(DB_SETTINGS, JSON.stringify(data)); }
+
+        // ============= UTILITY FUNCTIONS =============
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const day = days[d.getDay()];
+            const date = String(d.getDate()).padStart(2, '0');
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${date} ${month} ${year} (${day})`;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // ============= NAVIGATION =============
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            document.querySelectorAll('.nav-link, .nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
+            });
+
+            const titles = { home: 'Dashboard', absensi: 'Absensi', tambah: 'Tambah Kerja', penggajian: 'Penggajian', pengaturan: 'Pengaturan', login: 'Login' };
+            document.getElementById('navbarTitle').textContent = titles[pageId] || 'Dashboard';
+
+            if (pageId === 'home') renderHome();
+            else if (pageId === 'absensi') renderAbsensi();
+            else if (pageId === 'penggajian') renderPenggajian();
+            else if (pageId === 'pengaturan') renderPengaturan();
+        }
+
+        document.querySelectorAll('.nav-link, .nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.getAttribute('data-page');
+                if (page === 'login') {
+                    let user = getUser();
+                    user.isLoggedIn = false;
+                    setUser(user);
+                    showPage('login');
+                } else {
+                    showPage(page);
+                }
             });
         });
-        document.getElementById('btnCopySync').onclick = ()=>{
-            const txt = document.querySelector('.sync-cmd').textContent;
-            navigator.clipboard?.writeText(txt).then(()=>showToast('Di salin!'));
+
+        // ============= LOGIN =============
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            const staffId = document.getElementById('loginStaffId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!staffId || !password) {
+                showToast('❌ STAFF ID dan Password harus diisi');
+                return;
+            }
+
+            if (staffId === 'SPX001' && password === 'password') {
+                let user = getUser();
+                user.isLoggedIn = true;
+                user.staffId = staffId;
+                setUser(user);
+                showToast('✅ Login berhasil!');
+                document.getElementById('loginStaffId').value = '';
+                document.getElementById('loginPassword').value = '';
+                showPage('home');
+            } else {
+                showToast('❌ STAFF ID atau Password salah');
+            }
+        });
+
+        // ============= HOME PAGE =============
+        function renderHome() {
+            const absensi = getAbsensi();
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+
+            const totalHari = absensi.length;
+            const totalUpah = absensi.reduce((sum, a) => sum + (a.upah || 0), 0);
+            const shift1 = absensi.filter(a => a.shift === 'shift 1').length;
+            const shiftM = absensi.filter(a => a.shift === 'middle').length;
+            const shift2 = absensi.filter(a => a.shift === 'shift 2').length;
+            const bulanIni = absensi.filter(a => a.tanggal.substring(0, 7) === `${year}-${String(month).padStart(2, '0')}`).length;
+
+            document.getElementById('statHari').textContent = totalHari;
+            document.getElementById('statUpah').textContent = formatRupiah(totalUpah);
+            document.getElementById('statShift1').textContent = shift1;
+            document.getElementById('statShiftM').textContent = shiftM;
+            document.getElementById('statShift2').textContent = shift2;
+            document.getElementById('statBulanIni').textContent = bulanIni;
+
+            const now = new Date();
+            const date = now.getDate();
+            let periodStart, periodEnd, payDate, periodLabel;
+
+            if (date <= 15) {
+                periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
+                periodEnd = `${year}-${String(month).padStart(2, '0')}-15`;
+                payDate = `${year}-${String(month).padStart(2, '0')}-25`;
+                periodLabel = `1-15 ${now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`;
+            } else {
+                periodStart = `${year}-${String(month).padStart(2, '0')}-16`;
+                const lastDay = new Date(year, month, 0).getDate();
+                periodEnd = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+                const nextMonth = month === 12 ? 1 : month + 1;
+                const nextYear = month === 12 ? year + 1 : year;
+                payDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-10`;
+                periodLabel = `16-${lastDay} ${now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`;
+            }
+
+            const periodData = absensi.filter(a => a.tanggal >= periodStart && a.tanggal <= periodEnd);
+            const periodUpah = periodData.reduce((sum, a) => sum + (a.upah || 0), 0);
+
+            document.getElementById('periodInfo').textContent = periodLabel;
+            document.getElementById('periodUpah').textContent = formatRupiah(periodUpah);
+            document.getElementById('periodDays').textContent = periodData.length;
+            document.getElementById('periodPayDate').textContent = new Date(payDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            renderCharts(absensi);
+
+            const hour = now.getHours();
+            let greeting = 'Selamat Pagi';
+            if (hour >= 12 && hour < 17) greeting = 'Selamat Siang';
+            else if (hour >= 17) greeting = 'Selamat Malam';
+            document.getElementById('greetingText').textContent = greeting;
+
+            const user = getUser();
+            document.getElementById('userName').textContent = user.nama || 'Karyawan SPX';
+        }
+
+        function renderCharts(absensi) {
+            const monthData = {};
+            absensi.forEach(a => {
+                const month = a.tanggal.substring(0, 7);
+                monthData[month] = (monthData[month] || 0) + 1;
+            });
+
+            const chartAbsensi = document.getElementById('chartAbsensi').getContext('2d');
+            new Chart(chartAbsensi, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(monthData).sort(),
+                    datasets: [{
+                        label: 'Hari Kerja',
+                        data: Object.values(monthData),
+                        backgroundColor: '#0a84ff',
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: Math.max(...Object.values(monthData), 10) } }
+                }
+            });
+
+            const shiftData = {
+                'Shift 1': absensi.filter(a => a.shift === 'shift 1').length,
+                'Shift M': absensi.filter(a => a.shift === 'middle').length,
+                'Shift 2': absensi.filter(a => a.shift === 'shift 2').length
+            };
+
+            const chartShift = document.getElementById('chartShift').getContext('2d');
+            new Chart(chartShift, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(shiftData),
+                    datasets: [{
+                        data: Object.values(shiftData),
+                        backgroundColor: ['#0a84ff', '#34c759', '#ff9500']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // ============= ABSENSI PAGE =============
+        function renderAbsensi() {
+            let absensi = getAbsensi();
+            const filterMonth = document.getElementById('filterMonth').value;
+            const filterShift = document.getElementById('filterShift').value;
+
+            if (filterMonth) {
+                absensi = absensi.filter(a => a.tanggal.startsWith(filterMonth));
+            }
+            if (filterShift) {
+                absensi = absensi.filter(a => a.shift === filterShift);
+            }
+
+            absensi.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+
+            const tbody = document.getElementById('absensiTableBody');
+            tbody.innerHTML = '';
+
+            if (absensi.length === 0) {
+                document.getElementById('absensiEmpty').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('absensiEmpty').style.display = 'none';
+
+            absensi.forEach((a, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td>${a.tanggal}</td>
+                    <td>${formatDate(a.tanggal).split('(')[1].slice(0, -1)}</td>
+                    <td>${a.shift}</td>
+                    <td>${formatRupiah(a.upah)}</td>
+                    <td>
+                        <button class="btn btn-small btn-secondary" onclick="editAbsensi('${a.tanggal}')">✏️</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteAbsensi('${a.tanggal}')">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById('filterMonth').addEventListener('change', renderAbsensi);
+        document.getElementById('filterShift').addEventListener('change', renderAbsensi);
+
+        window.editAbsensi = function(tanggal) {
+            const absensi = getAbsensi();
+            const data = absensi.find(a => a.tanggal === tanggal);
+            if (!data) return;
+
+            document.getElementById('editTanggal').value = data.tanggal;
+            document.getElementById('editShift').value = data.shift;
+            document.getElementById('editUpah').value = data.upah;
+            document.getElementById('editCatatan').value = data.catatan || '';
+
+            document.getElementById('btnSimpanEdit').onclick = () => {
+                const updated = {
+                    tanggal: document.getElementById('editTanggal').value,
+                    shift: document.getElementById('editShift').value,
+                    upah: parseInt(document.getElementById('editUpah').value),
+                    catatan: document.getElementById('editCatatan').value
+                };
+
+                const idx = absensi.findIndex(a => a.tanggal === tanggal);
+                if (idx >= 0) {
+                    absensi[idx] = updated;
+                    setAbsensi(absensi);
+                    closeModal('modalEditAbsensi');
+                    showToast('✅ Absensi diperbarui');
+                    renderAbsensi();
+                    renderHome();
+                }
+            };
+
+            document.getElementById('modalEditAbsensi').classList.add('show');
         };
 
-        loadLocal();
-        if(checkAuth()) loadPage();
+        window.deleteAbsensi = function(tanggal) {
+            if (!confirm(`Hapus absensi ${tanggal}?`)) return;
+
+            let absensi = getAbsensi();
+            absensi = absensi.filter(a => a.tanggal !== tanggal);
+            setAbsensi(absensi);
+            showToast('✅ Absensi dihapus');
+            renderAbsensi();
+            renderHome();
+        };
+
+        // ============= TAMBAH KERJA =============
+        document.getElementById('btnSimpanAbsensi').addEventListener('click', () => {
+            const tanggal = document.getElementById('inputTanggal').value;
+            const shift = document.getElementById('inputShift').value;
+            const upah = parseInt(document.getElementById('inputUpah').value);
+
+            document.querySelectorAll('.form-error').forEach(e => e.textContent = '');
+
+            let valid = true;
+            if (!tanggal) { document.getElementById('errTanggal').textContent = 'Tanggal harus diisi'; valid = false; }
+            if (!shift) { document.getElementById('errShift').textContent = 'Shift harus dipilih'; valid = false; }
+            if (isNaN(upah) || upah <= 0) { document.getElementById('errUpah').textContent = 'Upah harus angka positif'; valid = false; }
+
+            if (!valid) return;
+
+            let absensi = getAbsensi();
+            if (absensi.some(a => a.tanggal === tanggal)) {
+                showToast('❌ Sudah ada data untuk tanggal ini');
+                return;
+            }
+
+            absensi.push({
+                tanggal,
+                shift,
+                upah,
+                catatan: document.getElementById('inputCatatan').value
+            });
+
+            setAbsensi(absensi);
+            showToast('✅ Absensi berhasil disimpan');
+
+            document.getElementById('inputTanggal').value = '';
+            document.getElementById('inputShift').value = '';
+            document.getElementById('inputUpah').value = '245000';
+            document.getElementById('inputCatatan').value = '';
+
+            showPage('home');
+            renderHome();
+        });
+
+        document.getElementById('btnBatalAbsensi').addEventListener('click', () => {
+            showPage('home');
+        });
+
+        document.getElementById('btnQuickAddAbsensi').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inputTanggal').value = today;
+            showPage('tambah');
+        });
+
+        document.getElementById('btnViewAbsensi').addEventListener('click', () => {
+            showPage('absensi');
+        });
+
+        // ============= PENGGAJIAN PAGE =============
+        function renderPenggajian() {
+            const absensi = getAbsensi();
+            const periods = {};
+
+            absensi.forEach(a => {
+                const [year, month, day] = a.tanggal.split('-');
+                const d = parseInt(day);
+                let periodKey;
+
+                if (d <= 15) {
+                    periodKey = `${year}-${month}-01_15`;
+                } else {
+                    const nextMonth = month === '12' ? '01' : String(parseInt(month) + 1).padStart(2, '0');
+                    const nextYear = month === '12' ? String(parseInt(year) + 1) : year;
+                    periodKey = `${year}-${month}-16_${nextMonth}`;
+                }
+
+                if (!periods[periodKey]) {
+                    periods[periodKey] = { data: [], upah: 0, days: 0 };
+                }
+                periods[periodKey].data.push(a);
+                periods[periodKey].upah += a.upah;
+                periods[periodKey].days += 1;
+            });
+
+            const container = document.getElementById('penggajianContainer');
+            container.innerHTML = '';
+
+            Object.entries(periods).sort((a, b) => b[0].localeCompare(a[0])).forEach(([key, period]) => {
+                const [year, month] = key.split('-');
+                const d = key.includes('_15') ? '01-15' : '16-akhir';
+                const payDate = key.includes('_15') ? `${year}-${month}-25` : `${parseInt(month) === 12 ? parseInt(year) + 1 : year}-${parseInt(month) === 12 ? '01' : String(parseInt(month) + 1).padStart(2, '0')}-10`;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 600;">📅 ${period.days} Hari Kerja</div>
+                            <div style="color: #888; font-size: 0.85em;">Periode: ${d} ${new Date(year + '-' + month + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.3em; font-weight: 700; color: #0a84ff;">${formatRupiah(period.upah)}</div>
+                            <div style="color: #888; font-size: 0.8em;">Dibayar: ${new Date(payDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                        <div><div style="color: #888; font-size: 0.8em;">Target Tabungan 20%</div><div style="font-weight: 600;">${formatRupiah(period.upah * 0.2)}</div></div>
+                        <div><div style="color: #888; font-size: 0.8em;">Sisa Uang</div><div style="font-weight: 600;">${formatRupiah(period.upah * 0.8)}</div></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (Object.keys(periods).length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #888; padding: 40px;">Belum ada data penggajian</div>';
+            }
+        }
+
+        // ============= PENGATURAN PAGE =============
+        function renderPengaturan() {
+            const user = getUser();
+            const settings = getSettings();
+
+            document.getElementById('settingNama').value = user.nama || '';
+            document.getElementById('settingStaffId').value = user.staffId || '';
+            document.getElementById('settingUpah').value = settings.upahDefault || WAGE_DEFAULT;
+            document.getElementById('settingDarkMode').value = settings.darkMode ? 'true' : 'false';
+            document.getElementById('settingFormatTgl').value = settings.formatTgl || 'dd-mm-yyyy';
+        }
+
+        document.getElementById('btnSimpanProfil').addEventListener('click', () => {
+            let user = getUser();
+            user.nama = document.getElementById('settingNama').value;
+            user.staffId = document.getElementById('settingStaffId').value;
+            setUser(user);
+
+            let settings = getSettings();
+            settings.upahDefault = parseInt(document.getElementById('settingUpah').value);
+            settings.darkMode = document.getElementById('settingDarkMode').value === 'true';
+            settings.formatTgl = document.getElementById('settingFormatTgl').value;
+            setSettings(settings);
+
+            showToast('✅ Pengaturan disimpan');
+            renderHome();
+        });
+
+        document.getElementById('btnExportData').addEventListener('click', () => {
+            const absensi = getAbsensi();
+            let csv = 'Tanggal,Hari,Shift,Upah,Catatan\n';
+            absensi.forEach(a => {
+                const day = new Date(a.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'short' });
+                csv += `${a.tanggal},${day},${a.shift},${a.upah},"${(a.catatan || '').replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spx_absensi_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            showToast('✅ Data diekspor ke CSV');
+        });
+
+        document.getElementById('btnBackupData').addEventListener('click', () => {
+            const backup = {
+                absensi: getAbsensi(),
+                user: getUser(),
+                settings: getSettings(),
+                timestamp: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spx_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('✅ Backup data berhasil');
+        });
+
+        document.getElementById('btnRestoreData').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const backup = JSON.parse(event.target.result);
+                        if (backup.absensi && backup.user && backup.settings) {
+                            setAbsensi(backup.absensi);
+                            setUser(backup.user);
+                            setSettings(backup.settings);
+                            showToast('✅ Restore data berhasil');
+                            renderPengaturan();
+                            renderHome();
+                        } else {
+                            showToast('❌ Format backup tidak valid');
+                        }
+                    } catch (e) {
+                        showToast('❌ Gagal membaca file backup');
+                    }
+                };
+                reader.readAsText(file);
+            });
+            input.click();
+        });
+
+        document.getElementById('btnResetData').addEventListener('click', () => {
+            if (!confirm('⚠️ Ini akan menghapus SEMUA data. Yakin?')) return;
+            if (!confirm('Benar-benar yakin? Tindakan ini TIDAK BISA DIBATALKAN!')) return;
+
+            localStorage.removeItem(DB_ABSENSI);
+            localStorage.removeItem(DB_USER);
+            localStorage.removeItem(DB_SETTINGS);
+            initData();
+            showToast('✅ Data berhasil direset');
+            renderHome();
+        });
+
+        // ============= REAL-TIME CLOCK =============
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ============= INIT =============
+        initData();
+        const user = getUser();
+        if (!user.isLoggedIn) {
+            showPage('login');
+        } else {
+            showPage('home');
+            renderHome();
+        }
     </script>
 </body>
 </html>
