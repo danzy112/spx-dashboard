@@ -293,17 +293,17 @@
             document.getElementById('modalBackdrop').classList.add('show');
         };
 
-        window.deleteEntry = function(tanggal){\
-            if(!confirm('Hapus '+tanggal+'?')) return false;\
-            const idx = localEntries.findIndex(e=>e.tanggal===tanggal);\
-            if(idx>=0){ localEntries[idx]._deleted = true; }\
-            else { localEntries.push({ tanggal, shift: '', status: '', catatan: '', _deleted: true, modifiedAt: Date.now() }); }\
-            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));\
-            document.getElementById('localChip').style.display = (localEntries.filter(x=>!x._deleted).length ? 'inline-block' : 'none');\
-            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';\
-            render();\
-            showToast('Dihapus: '+tanggal);\
-            return false;\
+        window.deleteEntry = function(tanggal){
+            if(!confirm('Hapus '+tanggal+'?')) return false;
+            const idx = localEntries.findIndex(e=>e.tanggal===tanggal);
+            if(idx>=0){ localEntries[idx]._deleted = true; }
+            else { localEntries.push({ tanggal, shift: '', status: '', catatan: '', _deleted: true, modifiedAt: Date.now() }); }
+            localStorage.setItem(LS_KEY, JSON.stringify(localEntries));
+            document.getElementById('localChip').style.display = (localEntries.filter(x=>!x._deleted).length ? 'inline-block' : 'none');
+            document.getElementById('localChip').textContent = localEntries.filter(x=>!x._deleted).length + ' catatan local';
+            render();
+            showToast('Dihapus: '+tanggal);
+            return false;
         };
 
         function openModal(){
