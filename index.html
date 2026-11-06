@@ -333,6 +333,11 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label class="form-label">Target Tabungan (% per periode)</label>
+                        <input type="number" id="settingSavingsPercent" class="form-input" placeholder="10">
+                    </div>
+
                     <div class="card">
                         <div style="font-weight: 600; margin-bottom: 16px;">💾 Data</div>
                         <button class="btn btn-secondary" id="btnExportData" style="width: 100%; margin-bottom: 8px;">📥 Export CSV</button>
@@ -368,11 +373,7 @@
                             </div>
                             <button class="btn btn-primary" id="btnLogin" style="width: 100%; margin-bottom: 12px;">🚀 Login</button>
                             
-                            <div style="color: #888; font-size: 0.85em; margin-top: 20px;">
-                                <div>Demo Credentials:</div>
-                                <div>STAFF ID: <strong>SPX001</strong></div>
-                                <div>Password: <strong>password</strong></div>
-                            </div>
+                            <!-- Private Login (no demo credentials visible) -->
                         </div>
                     </div>
                 </div>
@@ -478,7 +479,8 @@
                 localStorage.setItem(DB_SETTINGS, JSON.stringify({
                     darkMode: true,
                     formatTgl: 'dd-mm-yyyy',
-                    upahDefault: WAGE_DEFAULT
+                    upahDefault: WAGE_DEFAULT,
+                    savingsPercent: 10
                 }));
             }
         }
@@ -875,8 +877,8 @@
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                        <div><div style="color: #888; font-size: 0.8em;">Target Tabungan 20%</div><div style="font-weight: 600;">${formatRupiah(period.upah * 0.2)}</div></div>
-                        <div><div style="color: #888; font-size: 0.8em;">Sisa Uang</div><div style="font-weight: 600;">${formatRupiah(period.upah * 0.8)}</div></div>
+                        <div><div style="color: #888; font-size: 0.8em;">Target Tabungan ${settings.savingsPercent || 10}%</div><div style="font-weight: 600;">${formatRupiah(period.upah * (settings.savingsPercent || 10) / 100)}</div></div>
+                        <div><div style="color: #888; font-size: 0.8em;">Sisa Uang</div><div style="font-weight: 600;">${formatRupiah(period.upah * (100 - (settings.savingsPercent || 10)) / 100)}</div></div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -897,6 +899,7 @@
             document.getElementById('settingUpah').value = settings.upahDefault || WAGE_DEFAULT;
             document.getElementById('settingDarkMode').value = settings.darkMode ? 'true' : 'false';
             document.getElementById('settingFormatTgl').value = settings.formatTgl || 'dd-mm-yyyy';
+            document.getElementById('settingSavingsPercent').value = settings.savingsPercent || 10;
         }
 
         document.getElementById('btnSimpanProfil').addEventListener('click', () => {
@@ -909,6 +912,7 @@
             settings.upahDefault = parseInt(document.getElementById('settingUpah').value);
             settings.darkMode = document.getElementById('settingDarkMode').value === 'true';
             settings.formatTgl = document.getElementById('settingFormatTgl').value;
+            settings.savingsPercent = parseInt(document.getElementById('settingSavingsPercent').value) || 10;
             setSettings(settings);
 
             showToast('✅ Pengaturan disimpan');
