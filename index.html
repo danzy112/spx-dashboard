@@ -1045,7 +1045,7 @@
             });
 
             const saldo = totalMasuk - totalKeluar - totalTabungan - totalCashKeluar - totalSaldoToCash;
-            const cash = totalCashMasuk - totalCashKeluar;
+            const cash = totalCashMasuk - totalCashKeluar + totalSaldoToCash;
 
             document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
             document.getElementById('financeKeluar').textContent = formatRupiah(totalKeluar);
