@@ -131,7 +131,6 @@
                     <li><button class="nav-link active" data-page="home">🏠 Home</button></li>
                     <li><button class="nav-link" data-page="absensi">📋 Absensi</button></li>
                     <li><button class="nav-link" data-page="tambah">➕ Tambah Kerja</button></li>
-                    <li><button class="nav-link" data-page="penggajian">💰 Penggajian</button></li>
                     <li><button class="nav-link" data-page="keuangan">💵 Keuangan</button></li>
                     <li><button class="nav-link" data-page="pengaturan">⚙️ Pengaturan</button></li>
                     <li style="margin-top: 20px;"><button class="nav-link" data-page="login">🚪 Logout</button></li>
@@ -340,6 +339,7 @@
                                 <select id="financeJenis" class="form-select">
                                     <option value="masuk">📥 Uang Masuk</option>
                                     <option value="keluar">📤 Keluar (Pengeluaran)</option>
+                                    <option value="cash">💵 Uang Cash</option>
                                     <option value="utang">📊 Utang</option>
                                     <option value="piutang">📊 Piutang</option>
                                     <option value="tabung">🏦 Tabungan</option>
@@ -366,6 +366,7 @@
                                 <option value="">Semua</option>
                                 <option value="masuk">Masuk</option>
                                 <option value="keluar">Keluar</option>
+                                <option value="cash">Uang Cash</option>
                                 <option value="utang">Utang</option>
                                 <option value="piutang">Piutang</option>
                                 <option value="tabung">Tabungan</option>
@@ -504,10 +505,6 @@
                     <div class="nav-icon">➕</div>
                     <div>Tambah</div>
                 </button>
-                <button class="nav-btn" data-page="penggajian">
-                    <div class="nav-icon">💰</div>
-                    <div>Gajian</div>
-                </button>
                 <button class="nav-btn" data-page="keuangan">
                     <div class="nav-icon">💵</div>
                     <div>Keuangan</div>
@@ -645,7 +642,7 @@
                 if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
             });
 
-            const titles = { home: 'Dashboard', absensi: 'Absensi', tambah: 'Tambah Kerja', penggajian: 'Penggajian', keuangan: 'Keuangan', pengaturan: 'Pengaturan', login: 'Login' };
+            const titles = { home: 'Dashboard', absensi: 'Absensi', tambah: 'Tambah Kerja', keuangan: 'Keuangan', pengaturan: 'Pengaturan', login: 'Login' };
             document.getElementById('navbarTitle').textContent = titles[pageId] || 'Dashboard';
 
             if (pageId === 'home') renderHome();
@@ -1026,7 +1023,7 @@
 
             // Hitung ringkasan dari SEMUA data (tidak difilter)
             const allFinance = getFinance();
-            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0;
+            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0, totalCash = 0;
 
             allFinance.forEach(f => {
                 if (f.jenis === 'masuk') totalMasuk += f.jumlah;
@@ -1034,9 +1031,10 @@
                 else if (f.jenis === 'tabung') totalTabungan += f.jumlah;
                 else if (f.jenis === 'utang') totalUtang += f.jumlah;
                 else if (f.jenis === 'piutang') totalPiutang += f.jumlah;
+                else if (f.jenis === 'cash') totalCash += f.jumlah;
             });
 
-            const saldo = totalMasuk - totalKeluar - totalTabungan;
+            const saldo = totalMasuk - totalKeluar - totalTabungan - totalCash;
 
             document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
             document.getElementById('financeKeluar').textContent = formatRupiah(totalKeluar);
@@ -1055,7 +1053,7 @@
 
             document.getElementById('financeEmpty').style.display = 'none';
 
-            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', utang: '📊 Utang', piutang: '📊 Piutang', tabung: '🏦 Tabungan' };
+            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash: '💵 Cash', utang: '📊 Utang', piutang: '📊 Piutang', tabung: '🏦 Tabungan' };
 
             finance.forEach((f, idx) => {
                 const row = document.createElement('tr');
