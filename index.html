@@ -346,7 +346,8 @@
                                     <option value="cash_masuk">💵 Cash Masuk</option>
                                     <option value="cash_keluar">💵 Cash Keluar</option>
                                     <option value="saldo_to_cash">🔄 Saldo → Cash</option>
-                                    <option value="utang">📊 Utang</option>
+                                    <option value="utang_belum_bayar">📊 Utang (Belum Dibayar)</option>
+                                    <option value="utang_sudah_bayar">📊 Utang (Sudah Dibayar)</option>
                                     <option value="piutang_belum_bayar">📊 Piutang (Belum Dibayar)</option>
                                     <option value="piutang_sudah_bayar">📊 Piutang (Sudah Dibayar)</option>
                                     <option value="tabung">🏦 Tabungan</option>
@@ -376,7 +377,8 @@
                                 <option value="cash_masuk">Cash Masuk</option>
                                 <option value="cash_keluar">Cash Keluar</option>
                                 <option value="saldo_to_cash">Saldo→Cash</option>
-                                <option value="utang">Utang</option>
+                                <option value="utang_belum_bayar">Utang (Belum Dibayar)</option>
+                                <option value="utang_sudah_bayar">Utang (Sudah Dibayar)</option>
                                 <option value="piutang_belum_bayar">Piutang (Belum Dibayar)</option>
                                 <option value="piutang_sudah_bayar">Piutang (Sudah Dibayar)</option>
                                 <option value="tabung">Tabungan</option>
@@ -1033,13 +1035,15 @@
 
             // Hitung ringkasan dari SEMUA data (tidak difilter)
             const allFinance = getFinance();
-            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0, totalPiutangBelum = 0, totalPiutangSudah = 0, totalCashMasuk = 0, totalCashKeluar = 0, totalSaldoToCash = 0;
+            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalUtangBelum = 0, totalUtangSudah = 0, totalPiutang = 0, totalPiutangBelum = 0, totalPiutangSudah = 0, totalCashMasuk = 0, totalCashKeluar = 0, totalSaldoToCash = 0;
 
             allFinance.forEach(f => {
                 if (f.jenis === 'masuk') totalMasuk += f.jumlah;
                 else if (f.jenis === 'keluar') totalKeluar += f.jumlah;
                 else if (f.jenis === 'tabung') totalTabungan += f.jumlah;
                 else if (f.jenis === 'utang') totalUtang += f.jumlah;
+                else if (f.jenis === 'utang_belum_bayar') totalUtangBelum += f.jumlah;
+                else if (f.jenis === 'utang_sudah_bayar') totalUtangSudah += f.jumlah;
                 else if (f.jenis === 'piutang') totalPiutang += f.jumlah;
                 else if (f.jenis === 'piutang_belum_bayar') totalPiutangBelum += f.jumlah;
                 else if (f.jenis === 'piutang_sudah_bayar') totalPiutangSudah += f.jumlah;
@@ -1056,7 +1060,7 @@
             document.getElementById('financeSaldo').textContent = formatRupiah(saldo);
             document.getElementById('financeCash').textContent = formatRupiah(cash);
             document.getElementById('financeTabungan').textContent = formatRupiah(totalTabungan);
-            document.getElementById('financeUtang').textContent = formatRupiah(totalUtang);
+            document.getElementById('financeUtang').textContent = formatRupiah(totalUtangBelum + totalUtangSudah);
             document.getElementById('financePiutang').textContent = formatRupiah(totalPiutangBelum + totalPiutangSudah);
 
             const tbody = document.getElementById('financeTableBody');
@@ -1069,7 +1073,7 @@
 
             document.getElementById('financeEmpty').style.display = 'none';
 
-            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash_masuk: '💵 Cash Masuk', cash_keluar: '💵 Cash Keluar', saldo_to_cash: '🔄 Saldo→Cash', utang: '📊 Utang', piutang_belum_bayar: '📊 Piutang (Belum Dibayar)', piutang_sudah_bayar: '📊 Piutang (Sudah Dibayar)', tabung: '🏦 Tabungan' };
+            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash_masuk: '💵 Cash Masuk', cash_keluar: '💵 Cash Keluar', saldo_to_cash: '🔄 Saldo→Cash', utang_belum_bayar: '📊 Utang (Belum Dibayar)', utang_sudah_bayar: '📊 Utang (Sudah Dibayar)', piutang_belum_bayar: '📊 Piutang (Belum Dibayar)', piutang_sudah_bayar: '📊 Piutang (Sudah Dibayar)', tabung: '🏦 Tabungan' };
 
             finance.forEach((f, idx) => {
                 const row = document.createElement('tr');
