@@ -347,9 +347,9 @@
                                     <option value="cash_keluar">💵 Cash Keluar</option>
                                     <option value="saldo_to_cash">🔄 Saldo → Cash</option>
                                     <option value="utang_belum_bayar">📊 Utang (Belum Dibayar)</option>
-                                    <option value="utang_sudah_bayar">📊 Utang (Sudah Dibayar)</option>
+                                    <option value="utang_sudah_bayar" data-show-dibayar="true">📊 Utang (Sudah Dibayar)</option>
                                     <option value="piutang_belum_bayar">📊 Piutang (Belum Dibayar)</option>
-                                    <option value="piutang_sudah_bayar">📊 Piutang (Sudah Dibayar)</option>
+                                    <option value="piutang_sudah_bayar" data-show-dibayar="true">📊 Piutang (Sudah Dibayar)</option>
                                     <option value="tabung">🏦 Tabungan</option>
                                 </select>
                             </div>
@@ -360,7 +360,11 @@
                                 <input type="text" id="financeJumlah" class="form-input" placeholder="0" inputmode="numeric">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Keterangan</label>
+                                <label class="form-label">Dibayar Dengan</label>
+                                <select id="financeDibayarDengan" class="form-select" style="display: none;">
+                                    <option value="cash">💵 Cash</option>
+                                    <option value="saldo">💰 Saldo</option>
+                                </select>
                                 <input type="text" id="financeKeterangan" class="form-input" placeholder="Keterangan">
                             </div>
                         </div>
@@ -1035,7 +1039,7 @@
 
             // Hitung ringkasan dari SEMUA data (tidak difilter)
             const allFinance = getFinance();
-            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalUtangBelum = 0, totalUtangSudah = 0, totalPiutang = 0, totalPiutangBelum = 0, totalPiutangSudah = 0, totalCashMasuk = 0, totalCashKeluar = 0, totalSaldoToCash = 0;
+            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalUtangBelum = 0, totalUtangSudah = 0, totalPiutang = 0, totalPiutangBelum = 0, totalPiutangSudah = 0, totalCashMasuk = 0, totalCashKeluar = 0, totalSaldoToCash = 0, totalBayarUtangSaldo = 0, totalBayarPiutangSaldo = 0, totalBayarUtangCash = 0, totalBayarPiutangCash = 0;
 
             allFinance.forEach(f => {
                 if (f.jenis === 'masuk') totalMasuk += f.jumlah;
@@ -1043,17 +1047,25 @@
                 else if (f.jenis === 'tabung') totalTabungan += f.jumlah;
                 else if (f.jenis === 'utang') totalUtang += f.jumlah;
                 else if (f.jenis === 'utang_belum_bayar') totalUtangBelum += f.jumlah;
-                else if (f.jenis === 'utang_sudah_bayar') totalUtangSudah += f.jumlah;
+                else if (f.jenis === 'utang_sudah_bayar') {
+                    totalUtangSudah += f.jumlah;
+                    if (f.dibayar_dengan === 'saldo') totalBayarUtangSaldo += f.jumlah;
+                    else if (f.dibayar_dengan === 'cash') totalBayarUtangCash += f.jumlah;
+                }
                 else if (f.jenis === 'piutang') totalPiutang += f.jumlah;
                 else if (f.jenis === 'piutang_belum_bayar') totalPiutangBelum += f.jumlah;
-                else if (f.jenis === 'piutang_sudah_bayar') totalPiutangSudah += f.jumlah;
+                else if (f.jenis === 'piutang_sudah_bayar') {
+                    totalPiutangSudah += f.jumlah;
+                    if (f.dibayar_dengan === 'saldo') totalBayarPiutangSaldo += f.jumlah;
+                    else if (f.dibayar_dengan === 'cash') totalBayarPiutangCash += f.jumlah;
+                }
                 else if (f.jenis === 'cash_masuk') totalCashMasuk += f.jumlah;
                 else if (f.jenis === 'cash_keluar') totalCashKeluar += f.jumlah;
                 else if (f.jenis === 'saldo_to_cash') totalSaldoToCash += f.jumlah;
             });
 
-            const saldo = totalMasuk - totalKeluar - totalTabungan - totalCashKeluar - totalSaldoToCash;
-            const cash = totalCashMasuk - totalCashKeluar + totalSaldoToCash;
+            const saldo = totalMasuk - totalKeluar - totalTabungan - totalBayarUtangSaldo - totalBayarPiutangSaldo;
+            const cash = totalCashMasuk - totalCashKeluar + totalSaldoToCash - totalBayarUtangCash - totalBayarPiutangCash;
 
             document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
             document.getElementById('financeKeluar').textContent = formatRupiah(totalKeluar);
@@ -1077,9 +1089,10 @@
 
             finance.forEach((f, idx) => {
                 const row = document.createElement('tr');
+                const dibayarText = f.dibayar_dengan ? ` (${f.dibayar_dengan === 'saldo' ? '💰 Saldo' : '💵 Cash'})` : '';
                 row.innerHTML = `
                     <td>${f.tanggal}</td>
-                    <td>${jenisLabel[f.jenis] || f.jenis}</td>
+                    <td>${jenisLabel[f.jenis] || f.jenis}${dibayarText}</td>
                     <td>${formatRupiah(f.jumlah)}</td>
                     <td>${f.keterangan || '-'}</td>
                     <td>
@@ -1092,10 +1105,26 @@
 
         document.getElementById('filterFinanceJenis').addEventListener('change', renderKeuangan);
 
+        // Show/hide "Dibayar Dengan" dropdown based on jenis selection
+        document.getElementById('financeJenis').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const dibayarSelect = document.getElementById('financeDibayarDengan');
+            const ketLabel = document.querySelector('label[for="financeKeterangan"]') || document.getElementById('financeKeterangan').previousElementSibling;
+            
+            if (selectedOption.dataset.showDibayar === 'true') {
+                dibayarSelect.style.display = 'block';
+                ketLabel.textContent = 'Keterangan';
+            } else {
+                dibayarSelect.style.display = 'none';
+                ketLabel.textContent = 'Keterangan';
+            }
+        });
+
         document.getElementById('btnTambahFinance').addEventListener('click', () => {
             const tanggal = document.getElementById('financeTanggal').value;
             const jenis = document.getElementById('financeJenis').value;
             const jumlah = parseInt(document.getElementById('financeJumlah').value.replace(/[^0-9]/g, ''));
+            const dibayarDengan = jenis.includes('_sudah_bayar') ? document.getElementById('financeDibayarDengan').value : null;
             const keterangan = document.getElementById('financeKeterangan').value;
 
             if (!tanggal || !jenis || isNaN(jumlah) || jumlah <= 0) {
@@ -1104,13 +1133,21 @@
             }
 
             let finance = getFinance();
-            finance.push({ tanggal, jenis, jumlah, keterangan });
+            finance.push({ tanggal, jenis, jumlah, dibayar_dengan: dibayarDengan, keterangan });
             setFinance(finance);
+
+            // Jika jenisnya utang_sudah_bayar atau piutang_sudah_bayar, kurangi saldo jika dibayar dengan saldo
+            if ((jenis === 'utang_sudah_bayar' || jenis === 'piutang_sudah_bayar') && dibayarDengan === 'saldo') {
+                let settings = getSettings() || { saldo: 0 };
+                settings.saldo = (settings.saldo || 0) - jumlah;
+                setSettings(settings);
+            }
 
             document.getElementById('financeTanggal').value = '';
             document.getElementById('financeJenis').value = 'masuk';
             document.getElementById('financeJumlah').value = '';
             document.getElementById('financeKeterangan').value = '';
+            document.getElementById('financeDibayarDengan').style.display = 'none';
 
             showToast('✅ Transaksi berhasil ditambahkan');
             renderKeuangan();
