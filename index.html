@@ -676,12 +676,12 @@
                 return;
             }
 
-            const user = getUser();
+            let user = getUser();
             
-            // Cek apakah user sudah set password
+            // Jika password belum diset, set default password
             if (!user.password) {
-                showToast('❌ Password belum diset. Hubungi admin.');
-                return;
+                user.password = 'spx2024';
+                setUser(user);
             }
 
             // Validasi STAFF ID dan Password
