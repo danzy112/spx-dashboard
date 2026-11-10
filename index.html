@@ -132,6 +132,7 @@
                     <li><button class="nav-link" data-page="absensi">📋 Absensi</button></li>
                     <li><button class="nav-link" data-page="tambah">➕ Tambah Kerja</button></li>
                     <li><button class="nav-link" data-page="penggajian">💰 Penggajian</button></li>
+                    <li><button class="nav-link" data-page="keuangan">💵 Keuangan</button></li>
                     <li><button class="nav-link" data-page="pengaturan">⚙️ Pengaturan</button></li>
                     <li style="margin-top: 20px;"><button class="nav-link" data-page="login">🚪 Logout</button></li>
                 </ul>
@@ -296,6 +297,99 @@
                     </div>
                 </div>
 
+                <!-- KEUANGAN PAGE -->
+                <div class="page" id="keuangan">
+                    <div class="grid">
+                        <div class="card stat">
+                            <div class="stat-label">Total Masuk</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #34c759;" id="financeMasuk">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Total Keluar</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #ff3b30;" id="financeKeluar">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value" style="font-size: 1.3em;" id="financeSaldo">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Tabungan</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #ff9500;" id="financeTabungan">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Utang</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #ff3b30;" id="financeUtang">Rp0</div>
+                        </div>
+                        <div class="card stat">
+                            <div class="stat-label">Piutang</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #34c759;" id="financePiutang">Rp0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-weight: 600;">📝 Tambah Transaksi</div>
+                        </div>
+                        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal</label>
+                                <input type="date" id="financeTanggal" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jenis</label>
+                                <select id="financeJenis" class="form-select">
+                                    <option value="masuk">📥 Masuk (Gaji)</option>
+                                    <option value="keluar">📤 Keluar (Pengeluaran)</option>
+                                    <option value="utang">📊 Utang</option>
+                                    <option value="piutang">📊 Piutang</option>
+                                    <option value="tabung">🏦 Tabungan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah (Rp)</label>
+                                <input type="number" id="financeJumlah" class="form-input" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Keterangan</label>
+                                <input type="text" id="financeKeterangan" class="form-input" placeholder="Keterangan">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="btnTambahFinance" style="width: 100%;">➕ Tambah Transaksi</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-weight: 600;">📋 Riwayat Transaksi</div>
+                            <select id="filterFinanceJenis" class="form-select" style="width: auto;">
+                                <option value="">Semua</option>
+                                <option value="masuk">Masuk</option>
+                                <option value="keluar">Keluar</option>
+                                <option value="utang">Utang</option>
+                                <option value="piutang">Piutang</option>
+                                <option value="tabung">Tabungan</option>
+                            </select>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Jenis</th>
+                                        <th>Jumlah</th>
+                                        <th>Keterangan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="financeTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="text-align: center; color: #888; padding: 20px;" id="financeEmpty">Belum ada data keuangan</div>
+                    </div>
+                </div>
+
                 <!-- PENGATURAN PAGE -->
                 <div class="page" id="pengaturan">
                     <div class="card">
@@ -339,8 +433,19 @@
                     </div>
 
                     <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 16px;">🔐 Keamanan</div>
+                        <div class="form-group">
+                            <label class="form-label">Password Dashboard</label>
+                            <input type="password" id="settingPassword" class="form-input" placeholder="Set password untuk proteksi data">
+                        </div>
+                        <button class="btn btn-primary" id="btnSetPassword" style="width: 100%; margin-bottom: 12px;">🔒 Set Password</button>
+                        <button class="btn btn-danger" id="btnLogout" style="width: 100%;">🚪 Logout</button>
+                    </div>
+
+                    <div class="card">
                         <div style="font-weight: 600; margin-bottom: 16px;">💾 Data</div>
                         <button class="btn btn-secondary" id="btnExportData" style="width: 100%; margin-bottom: 8px;">📥 Export CSV</button>
+                        <button class="btn btn-secondary" id="btnExportFinance" style="width: 100%; margin-bottom: 8px;">📥 Export CSV Keuangan</button>
                         <button class="btn btn-secondary" id="btnBackupData" style="width: 100%; margin-bottom: 8px;">💾 Backup Data</button>
                         <button class="btn btn-secondary" id="btnRestoreData" style="width: 100%; margin-bottom: 8px;">📂 Restore Data</button>
                         <button class="btn btn-danger" id="btnResetData" style="width: 100%;">🗑️ Reset Semua Data</button>
@@ -403,6 +508,10 @@
                     <div class="nav-icon">💰</div>
                     <div>Gajian</div>
                 </button>
+                <button class="nav-btn" data-page="keuangan">
+                    <div class="nav-icon">💵</div>
+                    <div>Keuangan</div>
+                </button>
                 <button class="nav-btn" data-page="pengaturan">
                     <div class="nav-icon">⚙️</div>
                     <div>Atur</div>
@@ -451,6 +560,7 @@
         const DB_ABSENSI = 'spx_absensi';
         const DB_USER = 'spx_user';
         const DB_SETTINGS = 'spx_settings';
+        const DB_FINANCE = 'spx_finance';
         const WAGE_DEFAULT = 245000;
 
         // Init data jika belum ada
@@ -470,8 +580,9 @@
             }
             if (!localStorage.getItem(DB_USER)) {
                 localStorage.setItem(DB_USER, JSON.stringify({
-                    staffId: 'SPX001',
+                    staffId: 'S162524',
                     nama: 'Karyawan SPX',
+                    password: 'spx2024',
                     isLoggedIn: false
                 }));
             }
@@ -483,6 +594,9 @@
                     savingsPercent: 10
                 }));
             }
+            if (!localStorage.getItem(DB_FINANCE)) {
+                localStorage.setItem(DB_FINANCE, JSON.stringify([]));
+            }
         }
 
         function getAbsensi() { return JSON.parse(localStorage.getItem(DB_ABSENSI)) || []; }
@@ -491,6 +605,8 @@
         function setUser(data) { localStorage.setItem(DB_USER, JSON.stringify(data)); }
         function getSettings() { return JSON.parse(localStorage.getItem(DB_SETTINGS)) || {}; }
         function setSettings(data) { localStorage.setItem(DB_SETTINGS, JSON.stringify(data)); }
+        function getFinance() { return JSON.parse(localStorage.getItem(DB_FINANCE)) || []; }
+        function setFinance(data) { localStorage.setItem(DB_FINANCE, JSON.stringify(data)); }
 
         // ============= UTILITY FUNCTIONS =============
         function formatRupiah(num) {
@@ -529,12 +645,13 @@
                 if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
             });
 
-            const titles = { home: 'Dashboard', absensi: 'Absensi', tambah: 'Tambah Kerja', penggajian: 'Penggajian', pengaturan: 'Pengaturan', login: 'Login' };
+            const titles = { home: 'Dashboard', absensi: 'Absensi', tambah: 'Tambah Kerja', penggajian: 'Penggajian', keuangan: 'Keuangan', pengaturan: 'Pengaturan', login: 'Login' };
             document.getElementById('navbarTitle').textContent = titles[pageId] || 'Dashboard';
 
             if (pageId === 'home') renderHome();
             else if (pageId === 'absensi') renderAbsensi();
             else if (pageId === 'penggajian') renderPenggajian();
+            else if (pageId === 'keuangan') renderKeuangan();
             else if (pageId === 'pengaturan') renderPengaturan();
         }
 
@@ -562,10 +679,17 @@
                 return;
             }
 
-            if (staffId === 'SPX001' && password === 'password') {
-                let user = getUser();
+            const user = getUser();
+            
+            // Cek apakah user sudah set password
+            if (!user.password) {
+                showToast('❌ Password belum diset. Hubungi admin.');
+                return;
+            }
+
+            // Validasi STAFF ID dan Password
+            if (staffId === user.staffId && password === user.password) {
                 user.isLoggedIn = true;
-                user.staffId = staffId;
                 setUser(user);
                 showToast('✅ Login berhasil!');
                 document.getElementById('loginStaffId').value = '';
@@ -889,6 +1013,140 @@
             }
         }
 
+        // ============= KEUANGAN PAGE =============
+        function renderKeuangan() {
+            let finance = getFinance();
+            const filterJenis = document.getElementById('filterFinanceJenis').value;
+
+            if (filterJenis) {
+                finance = finance.filter(f => f.jenis === filterJenis);
+            }
+
+            finance.sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+
+            // Hitung ringkasan dari SEMUA data (tidak difilter)
+            const allFinance = getFinance();
+            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0;
+
+            allFinance.forEach(f => {
+                if (f.jenis === 'masuk') totalMasuk += f.jumlah;
+                else if (f.jenis === 'keluar') totalKeluar += f.jumlah;
+                else if (f.jenis === 'tabung') totalTabungan += f.jumlah;
+                else if (f.jenis === 'utang') totalUtang += f.jumlah;
+                else if (f.jenis === 'piutang') totalPiutang += f.jumlah;
+            });
+
+            const saldo = totalMasuk - totalKeluar - totalTabungan;
+
+            document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
+            document.getElementById('financeKeluar').textContent = formatRupiah(totalKeluar);
+            document.getElementById('financeSaldo').textContent = formatRupiah(saldo);
+            document.getElementById('financeTabungan').textContent = formatRupiah(totalTabungan);
+            document.getElementById('financeUtang').textContent = formatRupiah(totalUtang);
+            document.getElementById('financePiutang').textContent = formatRupiah(totalPiutang);
+
+            const tbody = document.getElementById('financeTableBody');
+            tbody.innerHTML = '';
+
+            if (finance.length === 0) {
+                document.getElementById('financeEmpty').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('financeEmpty').style.display = 'none';
+
+            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', utang: '📊 Utang', piutang: '📊 Piutang', tabung: '🏦 Tabungan' };
+
+            finance.forEach((f, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${f.tanggal}</td>
+                    <td>${jenisLabel[f.jenis] || f.jenis}</td>
+                    <td>${formatRupiah(f.jumlah)}</td>
+                    <td>${f.keterangan || '-'}</td>
+                    <td>
+                        <button class="btn btn-small btn-danger" onclick="deleteFinance(${idx})">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById('filterFinanceJenis').addEventListener('change', renderKeuangan);
+
+        document.getElementById('btnTambahFinance').addEventListener('click', () => {
+            const tanggal = document.getElementById('financeTanggal').value;
+            const jenis = document.getElementById('financeJenis').value;
+            const jumlah = parseInt(document.getElementById('financeJumlah').value);
+            const keterangan = document.getElementById('financeKeterangan').value;
+
+            if (!tanggal || !jenis || isNaN(jumlah) || jumlah <= 0) {
+                showToast('❌ Lengkapi semua field');
+                return;
+            }
+
+            let finance = getFinance();
+            finance.push({ tanggal, jenis, jumlah, keterangan });
+            setFinance(finance);
+
+            document.getElementById('financeTanggal').value = '';
+            document.getElementById('financeJenis').value = 'masuk';
+            document.getElementById('financeJumlah').value = '';
+            document.getElementById('financeKeterangan').value = '';
+
+            showToast('✅ Transaksi berhasil ditambahkan');
+            renderKeuangan();
+        });
+
+        window.deleteFinance = function(idx) {
+            if (!confirm('Hapus transaksi ini?')) return;
+            let finance = getFinance();
+            finance.splice(idx, 1);
+            setFinance(finance);
+            showToast('✅ Transaksi dihapus');
+            renderKeuangan();
+        };
+
+        // ============= PASSWORD & LOGOUT =============
+        document.getElementById('btnSetPassword').addEventListener('click', () => {
+            const password = document.getElementById('settingPassword').value.trim();
+            if (!password || password.length < 4) {
+                showToast('❌ Password minimal 4 karakter');
+                return;
+            }
+
+            let user = getUser();
+            user.password = password;
+            setUser(user);
+            document.getElementById('settingPassword').value = '';
+            showToast('✅ Password berhasil diset');
+        });
+
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            if (!confirm('Logout dari dashboard?')) return;
+            let user = getUser();
+            user.isLoggedIn = false;
+            setUser(user);
+            showPage('login');
+            showToast('✅ Logout berhasil');
+        });
+
+        document.getElementById('btnExportFinance').addEventListener('click', () => {
+            const finance = getFinance();
+            let csv = 'Tanggal,Jenis,Jumlah,Keterangan\\n';
+            finance.forEach(f => {
+                csv += `${f.tanggal},${f.jenis},${f.jumlah},"${(f.keterangan || '').replace(/"/g, '""')}"\\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spx_keuangan_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            showToast('✅ Data keuangan diekspor ke CSV');
+        });
+
         // ============= PENGATURAN PAGE =============
         function renderPengaturan() {
             const user = getUser();
@@ -941,6 +1199,7 @@
                 absensi: getAbsensi(),
                 user: getUser(),
                 settings: getSettings(),
+                finance: getFinance(),
                 timestamp: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -968,6 +1227,7 @@
                             setAbsensi(backup.absensi);
                             setUser(backup.user);
                             setSettings(backup.settings);
+                            if (backup.finance) setFinance(backup.finance);
                             showToast('✅ Restore data berhasil');
                             renderPengaturan();
                             renderHome();
@@ -990,6 +1250,7 @@
             localStorage.removeItem(DB_ABSENSI);
             localStorage.removeItem(DB_USER);
             localStorage.removeItem(DB_SETTINGS);
+            localStorage.removeItem(DB_FINANCE);
             initData();
             showToast('✅ Data berhasil direset');
             renderHome();
