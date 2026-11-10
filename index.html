@@ -312,6 +312,10 @@
                             <div class="stat-value" style="font-size: 1.3em;" id="financeSaldo">Rp0</div>
                         </div>
                         <div class="card stat">
+                            <div class="stat-label">Uang Cash</div>
+                            <div class="stat-value" style="font-size: 1.3em; color: #ff9500;" id="financeCash">Rp0</div>
+                        </div>
+                        <div class="card stat">
                             <div class="stat-label">Tabungan</div>
                             <div class="stat-value" style="font-size: 1.3em; color: #ff9500;" id="financeTabungan">Rp0</div>
                         </div>
@@ -339,7 +343,9 @@
                                 <select id="financeJenis" class="form-select">
                                     <option value="masuk">📥 Uang Masuk</option>
                                     <option value="keluar">📤 Keluar (Pengeluaran)</option>
-                                    <option value="cash">💵 Uang Cash</option>
+                                    <option value="cash_masuk">💵 Cash Masuk</option>
+                                    <option value="cash_keluar">💵 Cash Keluar</option>
+                                    <option value="saldo_to_cash">🔄 Saldo → Cash</option>
                                     <option value="utang">📊 Utang</option>
                                     <option value="piutang">📊 Piutang</option>
                                     <option value="tabung">🏦 Tabungan</option>
@@ -366,7 +372,9 @@
                                 <option value="">Semua</option>
                                 <option value="masuk">Masuk</option>
                                 <option value="keluar">Keluar</option>
-                                <option value="cash">Uang Cash</option>
+                                <option value="cash_masuk">Cash Masuk</option>
+                                <option value="cash_keluar">Cash Keluar</option>
+                                <option value="saldo_to_cash">Saldo→Cash</option>
                                 <option value="utang">Utang</option>
                                 <option value="piutang">Piutang</option>
                                 <option value="tabung">Tabungan</option>
@@ -1023,7 +1031,7 @@
 
             // Hitung ringkasan dari SEMUA data (tidak difilter)
             const allFinance = getFinance();
-            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0, totalCash = 0;
+            let totalMasuk = 0, totalKeluar = 0, totalTabungan = 0, totalUtang = 0, totalPiutang = 0, totalCashMasuk = 0, totalCashKeluar = 0, totalSaldoToCash = 0;
 
             allFinance.forEach(f => {
                 if (f.jenis === 'masuk') totalMasuk += f.jumlah;
@@ -1031,14 +1039,18 @@
                 else if (f.jenis === 'tabung') totalTabungan += f.jumlah;
                 else if (f.jenis === 'utang') totalUtang += f.jumlah;
                 else if (f.jenis === 'piutang') totalPiutang += f.jumlah;
-                else if (f.jenis === 'cash') totalCash += f.jumlah;
+                else if (f.jenis === 'cash_masuk') totalCashMasuk += f.jumlah;
+                else if (f.jenis === 'cash_keluar') totalCashKeluar += f.jumlah;
+                else if (f.jenis === 'saldo_to_cash') totalSaldoToCash += f.jumlah;
             });
 
-            const saldo = totalMasuk - totalKeluar - totalTabungan - totalCash;
+            const saldo = totalMasuk - totalKeluar - totalTabungan - totalCashKeluar - totalSaldoToCash;
+            const cash = totalCashMasuk - totalCashKeluar;
 
             document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
             document.getElementById('financeKeluar').textContent = formatRupiah(totalKeluar);
             document.getElementById('financeSaldo').textContent = formatRupiah(saldo);
+            document.getElementById('financeCash').textContent = formatRupiah(cash);
             document.getElementById('financeTabungan').textContent = formatRupiah(totalTabungan);
             document.getElementById('financeUtang').textContent = formatRupiah(totalUtang);
             document.getElementById('financePiutang').textContent = formatRupiah(totalPiutang);
@@ -1053,7 +1065,7 @@
 
             document.getElementById('financeEmpty').style.display = 'none';
 
-            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash: '💵 Cash', utang: '📊 Utang', piutang: '📊 Piutang', tabung: '🏦 Tabungan' };
+            const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash_masuk: '💵 Cash Masuk', cash_keluar: '💵 Cash Keluar', saldo_to_cash: '🔄 Saldo→Cash', utang: '📊 Utang', piutang: '📊 Piutang', tabung: '🏦 Tabungan' };
 
             finance.forEach((f, idx) => {
                 const row = document.createElement('tr');
@@ -1075,7 +1087,7 @@
         document.getElementById('btnTambahFinance').addEventListener('click', () => {
             const tanggal = document.getElementById('financeTanggal').value;
             const jenis = document.getElementById('financeJenis').value;
-            const jumlah = parseInt(document.getElementById('financeJumlah').value);
+            const jumlah = parseInt(document.getElementById('financeJumlah').value.replace(/[^0-9]/g, ''));
             const keterangan = document.getElementById('financeKeterangan').value;
 
             if (!tanggal || !jenis || isNaN(jumlah) || jumlah <= 0) {
