@@ -1090,20 +1090,20 @@
         document.getElementById('filterFinanceJenis').addEventListener('change', renderKeuangan);
 
         function parseJumlah(text) {
-            const t = text.toLowerCase().replace(/rp\\.?/g, ' ').replace(/rupiah/g, ' ');
+            const t = text.toLowerCase().replace(/rp\.?/g, ' ').replace(/rupiah/g, ' ');
             const patterns = [
-                /(\\d+(?:[.,]\\d+)?)\\s*(?:jt|juta)\\b/,
-                /(\\d+(?:[.,]\\d+)?)\\s*(?:rb|ribu)\\b/,
-                /(\\d{1,3}(?:\\.\\d{3})+)/,
-                /(\\d{4,})/
+                /(\d+(?:[.,]\d+)?)\s*(?:jt|juta)\b/,
+                /(\d+(?:[.,]\d+)?)\s*(?:rb|ribu)\b/,
+                /(\d{1,3}(?:\.\d{3})+)/,
+                /(\d{4,})/
             ];
             for (let i = 0; i < patterns.length; i++) {
                 const m = t.match(patterns[i]);
                 if (!m) continue;
-                let n = parseFloat(m[1].replace(/\\./g, '').replace(',', '.'));
+                let n = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
                 if (i === 0) n = n * 1000000;
                 else if (i === 1) n = n * 1000;
-                else if (i === 2) n = parseInt(m[1].replace(/\\./g, ''), 10);
+                else if (i === 2) n = parseInt(m[1].replace(/\./g, ''), 10);
                 else n = parseInt(m[1], 10);
                 if (!isNaN(n) && n > 0) return Math.round(n);
             }
@@ -1117,45 +1117,47 @@
             const jumlah = parseJumlah(low);
             if (!jumlah) return { error: 'Jumlah tidak ketemu. Contoh: jajan 10rb cash' };
 
-            const hasCash = /\\bcash\\b|\\btunai\\b/.test(low);
-            const hasSaldo = /\\bsaldo\\b|\\brekening\\b|\\btransfer\\b/.test(low);
-            const bayar = /\\bbayar\\b|\\blunas\\b|\\bsudah\\s*bayar\\b|\\bsudah\\s*dibayar\\b/.test(low);
-            const belum = /\\bbelum\\b/.test(low);
-            const terima = /\\bterima\\b|\\bditerima\\b|\\bdibayar\\s*balik\\b/.test(low);
+            const hasCash = /\bcash\b|\btunai\b/.test(low);
+            const hasSaldo = /\bsaldo\b|\brekening\b|\btransfer\b/.test(low);
+            const bayar = /\bbayar\b|\blunas\b|\bsudah\s*bayar\b|\bsudah\s*dibayar\b/.test(low);
+            const belum = /\bbelum\b/.test(low);
+            const terima = /\bterima\b|\bditerima\b|\bdibayar\s*balik\b/.test(low);
 
             let jenis = null;
             let dibayar = null;
             let ket = text;
 
-            if (/\\b(tarik|pindah|cairkan|ambil)\\b/.test(low) && /\\bsaldo\\b/.test(low) && /\\bcash\\b|\\btunai\\b/.test(low)) {
+            if (/\b(tarik|pindah|cairkan|ambil)\b/.test(low) && /\bsaldo\b/.test(low) && /\bcash\b|\btunai\b/.test(low)) {
                 jenis = 'saldo_to_cash';
-            } else if (/\\b(tabung|nabung|tabungan|menabung)\\b/.test(low)) {
+            } else if (/\b(tabung|nabung|tabungan|menabung)\b/.test(low)) {
                 jenis = 'tabung';
-            } else if (/\\butang\\b/.test(low)) {
+            } else if (/\butang\b/.test(low)) {
                 if (bayar && !belum) {
                     jenis = 'utang_sudah_bayar';
                     dibayar = hasSaldo && !hasCash ? 'saldo' : 'cash';
                 } else {
                     jenis = 'utang_belum_bayar';
                 }
-            } else if (/\\bpiutang\\b/.test(low)) {
+            } else if (/\bpiutang\b/.test(low)) {
                 if ((terima || bayar) && !belum) {
                     jenis = 'piutang_sudah_bayar';
                     dibayar = hasSaldo && !hasCash ? 'saldo' : (hasCash ? 'cash' : 'saldo');
                 } else {
                     jenis = 'piutang_belum_bayar';
                 }
-            } else if (/\\b(gaji|masuk|terima|dapat)\\b/.test(low) && !/\\b(keluar|jajan|beli|bayar)\\b/.test(low)) {
+            } else if (/\b(gaji|masuk|terima|dapat)\b/.test(low) && !/\b(keluar|jajan|beli|bayar)\b/.test(low)) {
                 jenis = hasCash && !hasSaldo ? 'cash_masuk' : 'masuk';
             } else if (hasCash && !hasSaldo) {
                 jenis = 'cash_keluar';
             } else if (hasSaldo && !hasCash) {
                 jenis = 'keluar';
-            } else if (/\\b(jajan|makan|beli|keluar|bayar|ongkos|bensin|pulsa)\\b/.test(low)) {
+            } else if (/\b(jajan|makan|beli|keluar|bayar|ongkos|bensin|pulsa)\b/.test(low)) {
                 jenis = 'keluar';
             } else {
                 return { error: 'Tidak paham. Sebut: gaji/masuk, jajan/keluar + cash atau saldo, utang, piutang, tabung, tarik saldo ke cash' };
             }
+
+            if (dibayar === null) dibayar = hasCash ? 'cash' : (hasSaldo ? 'saldo' : null);
 
             return { jenis, jumlah, dibayar_dengan: dibayar, keterangan: ket };
         }
@@ -1258,9 +1260,9 @@
 
         document.getElementById('btnExportFinance').addEventListener('click', () => {
             const finance = getFinance();
-            let csv = 'Tanggal,Jenis,Jumlah,Keterangan\\n';
+            let csv = 'Tanggal,Jenis,Jumlah,Keterangan\n';
             finance.forEach(f => {
-                csv += `${f.tanggal},${f.jenis},${f.jumlah},"${(f.keterangan || '').replace(/"/g, '""')}"\\n`;
+                csv += `${f.tanggal},${f.jenis},${f.jumlah},"${(f.keterangan || '').replace(/"/g, '""')}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
