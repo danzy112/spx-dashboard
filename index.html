@@ -330,44 +330,19 @@
                     </div>
 
                     <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div style="font-weight: 600;">📝 Tambah Transaksi</div>
+                        <div style="font-weight: 600; margin-bottom: 8px;">📝 Tambah Transaksi</div>
+                        <div style="color: #888; font-size: 0.8em; margin-bottom: 12px; line-height: 1.5;">
+                            Tulis biasa. Contoh: gaji masuk 2.450.000 · jajan 10rb cash · jajan 10 ribu saldo · tarik saldo ke cash 100rb · tabung 50rb · utang 20rb belum bayar · bayar utang 20rb cash · piutang 50rb belum bayar · terima piutang 50rb saldo
                         </div>
-                        <div class="grid" style="grid-template-columns: 1fr 1fr;">
-                            <div class="form-group">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" id="financeTanggal" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Jenis</label>
-                                <select id="financeJenis" class="form-select">
-                                    <option value="masuk">📥 Uang Masuk</option>
-                                    <option value="keluar">📤 Keluar (Pengeluaran)</option>
-                                    <option value="cash_masuk">💵 Cash Masuk</option>
-                                    <option value="cash_keluar">💵 Cash Keluar</option>
-                                    <option value="saldo_to_cash">🔄 Saldo → Cash</option>
-                                    <option value="utang_belum_bayar">📊 Utang (Belum Dibayar)</option>
-                                    <option value="utang_sudah_bayar" data-show-dibayar="true">📊 Utang (Sudah Dibayar)</option>
-                                    <option value="piutang_belum_bayar">📊 Piutang (Belum Dibayar)</option>
-                                    <option value="piutang_sudah_bayar" data-show-dibayar="true">📊 Piutang (Sudah Dibayar)</option>
-                                    <option value="tabung">🏦 Tabungan</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" id="financeTanggal" class="form-input">
                         </div>
-                        <div class="grid" style="grid-template-columns: 1fr 1fr;">
-                            <div class="form-group">
-                                <label class="form-label">Jumlah (Rp)</label>
-                                <input type="text" id="financeJumlah" class="form-input" placeholder="0" inputmode="numeric">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Dibayar Dengan</label>
-                                <select id="financeDibayarDengan" class="form-select" style="display: none;">
-                                    <option value="cash">💵 Cash</option>
-                                    <option value="saldo">💰 Saldo</option>
-                                </select>
-                                <input type="text" id="financeKeterangan" class="form-input" placeholder="Keterangan">
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Kalimat</label>
+                            <input type="text" id="financeKalimat" class="form-input" placeholder="gaji masuk 2450000" autocomplete="off">
                         </div>
+                        <div id="financePreview" style="display: none; margin-bottom: 12px; padding: 10px 12px; background: rgba(10,132,255,0.12); border-radius: 8px; font-size: 0.9em;"></div>
                         <button class="btn btn-primary" id="btnTambahFinance" style="width: 100%;">➕ Tambah Transaksi</button>
                     </div>
 
@@ -465,13 +440,14 @@
                         <button class="btn btn-secondary" id="btnExportFinance" style="width: 100%; margin-bottom: 8px;">📥 Export CSV Keuangan</button>
                         <button class="btn btn-secondary" id="btnBackupData" style="width: 100%; margin-bottom: 8px;">💾 Backup Data</button>
                         <button class="btn btn-secondary" id="btnRestoreData" style="width: 100%; margin-bottom: 8px;">📂 Restore Data</button>
+                        <button class="btn btn-danger" id="btnResetFinance" style="width: 100%; margin-bottom: 8px;">🗑️ Hapus Semua Keuangan</button>
                         <button class="btn btn-danger" id="btnResetData" style="width: 100%;">🗑️ Reset Semua Data</button>
                     </div>
 
                     <div class="card">
                         <div style="font-weight: 600; margin-bottom: 8px;">ℹ️ Informasi Aplikasi</div>
                         <div style="color: #888; font-size: 0.85em;">
-                            <div>SPX Dashboard v2.0.0</div>
+                            <div>SPX Dashboard v2.2.0</div>
                             <div>© 2026 DANZYYY. All Rights Reserved.</div>
                             <div style="margin-top: 8px;">Personal Attendance Management System</div>
                         </div>
@@ -574,6 +550,7 @@
         const DB_USER = 'spx_user';
         const DB_SETTINGS = 'spx_settings';
         const DB_FINANCE = 'spx_finance';
+        const FINANCE_RESET_FLAG = 'spx_finance_reset_v22';
         const WAGE_DEFAULT = 245000;
 
         // Init data jika belum ada
@@ -609,6 +586,11 @@
             }
             if (!localStorage.getItem(DB_FINANCE)) {
                 localStorage.setItem(DB_FINANCE, JSON.stringify([]));
+            }
+            // sekali: kosongkan catatan keuangan lama supaya bisa input ulang
+            if (!localStorage.getItem(FINANCE_RESET_FLAG)) {
+                localStorage.setItem(DB_FINANCE, JSON.stringify([]));
+                localStorage.setItem(FINANCE_RESET_FLAG, '1');
             }
         }
 
@@ -1087,80 +1069,168 @@
 
             const jenisLabel = { masuk: '📥 Masuk', keluar: '📤 Keluar', cash_masuk: '💵 Cash Masuk', cash_keluar: '💵 Cash Keluar', saldo_to_cash: '🔄 Saldo→Cash', utang_belum_bayar: '📊 Utang (Belum Dibayar)', utang_sudah_bayar: '📊 Utang (Sudah Dibayar)', piutang_belum_bayar: '📊 Piutang (Belum Dibayar)', piutang_sudah_bayar: '📊 Piutang (Sudah Dibayar)', tabung: '🏦 Tabungan' };
 
-            finance.forEach((f, idx) => {
+            finance.forEach((f) => {
                 const row = document.createElement('tr');
                 const dibayarText = f.dibayar_dengan ? ` (${f.dibayar_dengan === 'saldo' ? '💰 Saldo' : '💵 Cash'})` : '';
+                const fid = f.id || '';
                 row.innerHTML = `
                     <td>${f.tanggal}</td>
                     <td>${jenisLabel[f.jenis] || f.jenis}${dibayarText}</td>
                     <td>${formatRupiah(f.jumlah)}</td>
                     <td>${f.keterangan || '-'}</td>
                     <td>
-                        <button class="btn btn-small btn-danger" onclick="deleteFinance(${idx})">🗑️</button>
+                        <button class="btn btn-small btn-danger" data-fid="${fid}">🗑️</button>
                     </td>
                 `;
+                row.querySelector('button').addEventListener('click', () => deleteFinance(fid));
                 tbody.appendChild(row);
             });
         }
 
         document.getElementById('filterFinanceJenis').addEventListener('change', renderKeuangan);
 
-        // Show/hide "Dibayar Dengan" dropdown based on jenis selection
-        document.getElementById('financeJenis').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const dibayarSelect = document.getElementById('financeDibayarDengan');
-            const ketLabel = document.querySelector('label[for="financeKeterangan"]') || document.getElementById('financeKeterangan').previousElementSibling;
-            
-            if (selectedOption.dataset.showDibayar === 'true') {
-                dibayarSelect.style.display = 'block';
-                ketLabel.textContent = 'Keterangan';
-            } else {
-                dibayarSelect.style.display = 'none';
-                ketLabel.textContent = 'Keterangan';
+        function parseJumlah(text) {
+            const t = text.toLowerCase().replace(/rp\\.?/g, ' ').replace(/rupiah/g, ' ');
+            const patterns = [
+                /(\\d+(?:[.,]\\d+)?)\\s*(?:jt|juta)\\b/,
+                /(\\d+(?:[.,]\\d+)?)\\s*(?:rb|ribu)\\b/,
+                /(\\d{1,3}(?:\\.\\d{3})+)/,
+                /(\\d{4,})/
+            ];
+            for (let i = 0; i < patterns.length; i++) {
+                const m = t.match(patterns[i]);
+                if (!m) continue;
+                let n = parseFloat(m[1].replace(/\\./g, '').replace(',', '.'));
+                if (i === 0) n = n * 1000000;
+                else if (i === 1) n = n * 1000;
+                else if (i === 2) n = parseInt(m[1].replace(/\\./g, ''), 10);
+                else n = parseInt(m[1], 10);
+                if (!isNaN(n) && n > 0) return Math.round(n);
             }
-        });
+            return 0;
+        }
+
+        function parseKalimat(raw) {
+            const text = (raw || '').trim();
+            const low = text.toLowerCase();
+            if (!text) return { error: 'Kalimat kosong' };
+            const jumlah = parseJumlah(low);
+            if (!jumlah) return { error: 'Jumlah tidak ketemu. Contoh: jajan 10rb cash' };
+
+            const hasCash = /\\bcash\\b|\\btunai\\b/.test(low);
+            const hasSaldo = /\\bsaldo\\b|\\brekening\\b|\\btransfer\\b/.test(low);
+            const bayar = /\\bbayar\\b|\\blunas\\b|\\bsudah\\s*bayar\\b|\\bsudah\\s*dibayar\\b/.test(low);
+            const belum = /\\bbelum\\b/.test(low);
+            const terima = /\\bterima\\b|\\bditerima\\b|\\bdibayar\\s*balik\\b/.test(low);
+
+            let jenis = null;
+            let dibayar = null;
+            let ket = text;
+
+            if (/\\b(tarik|pindah|cairkan|ambil)\\b/.test(low) && /\\bsaldo\\b/.test(low) && /\\bcash\\b|\\btunai\\b/.test(low)) {
+                jenis = 'saldo_to_cash';
+            } else if (/\\b(tabung|nabung|tabungan|menabung)\\b/.test(low)) {
+                jenis = 'tabung';
+            } else if (/\\butang\\b/.test(low)) {
+                if (bayar && !belum) {
+                    jenis = 'utang_sudah_bayar';
+                    dibayar = hasSaldo && !hasCash ? 'saldo' : 'cash';
+                } else {
+                    jenis = 'utang_belum_bayar';
+                }
+            } else if (/\\bpiutang\\b/.test(low)) {
+                if ((terima || bayar) && !belum) {
+                    jenis = 'piutang_sudah_bayar';
+                    dibayar = hasSaldo && !hasCash ? 'saldo' : (hasCash ? 'cash' : 'saldo');
+                } else {
+                    jenis = 'piutang_belum_bayar';
+                }
+            } else if (/\\b(gaji|masuk|terima|dapat)\\b/.test(low) && !/\\b(keluar|jajan|beli|bayar)\\b/.test(low)) {
+                jenis = hasCash && !hasSaldo ? 'cash_masuk' : 'masuk';
+            } else if (hasCash && !hasSaldo) {
+                jenis = 'cash_keluar';
+            } else if (hasSaldo && !hasCash) {
+                jenis = 'keluar';
+            } else if (/\\b(jajan|makan|beli|keluar|bayar|ongkos|bensin|pulsa)\\b/.test(low)) {
+                jenis = 'keluar';
+            } else {
+                return { error: 'Tidak paham. Sebut: gaji/masuk, jajan/keluar + cash atau saldo, utang, piutang, tabung, tarik saldo ke cash' };
+            }
+
+            return { jenis, jumlah, dibayar_dengan: dibayar, keterangan: ket };
+        }
+
+        function updateFinancePreview() {
+            const el = document.getElementById('financePreview');
+            const raw = document.getElementById('financeKalimat').value;
+            if (!raw.trim()) { el.style.display = 'none'; return; }
+            const p = parseKalimat(raw);
+            const jenisLabel = { masuk: '📥 Masuk (saldo)', keluar: '📤 Keluar (saldo)', cash_masuk: '💵 Cash Masuk', cash_keluar: '💵 Cash Keluar', saldo_to_cash: '🔄 Saldo→Cash', utang_belum_bayar: '📊 Utang belum bayar', utang_sudah_bayar: '📊 Utang sudah bayar', piutang_belum_bayar: '📊 Piutang belum bayar', piutang_sudah_bayar: '📊 Piutang sudah bayar', tabung: '🏦 Tabungan' };
+            el.style.display = 'block';
+            if (p.error) {
+                el.textContent = '⚠️ ' + p.error;
+                return;
+            }
+            const via = p.dibayar_dengan ? ' · via ' + p.dibayar_dengan : '';
+            el.textContent = (jenisLabel[p.jenis] || p.jenis) + ' · ' + formatRupiah(p.jumlah) + via;
+        }
+
+        document.getElementById('financeKalimat').addEventListener('input', updateFinancePreview);
 
         document.getElementById('btnTambahFinance').addEventListener('click', () => {
             const tanggal = document.getElementById('financeTanggal').value;
-            const jenis = document.getElementById('financeJenis').value;
-            const jumlah = parseInt(document.getElementById('financeJumlah').value.replace(/[^0-9]/g, ''));
-            const dibayarDengan = jenis.includes('_sudah_bayar') ? document.getElementById('financeDibayarDengan').value : null;
-            const keterangan = document.getElementById('financeKeterangan').value;
+            const parsed = parseKalimat(document.getElementById('financeKalimat').value);
 
-            if (!tanggal || !jenis || isNaN(jumlah) || jumlah <= 0) {
-                showToast('❌ Lengkapi semua field');
+            if (!tanggal) {
+                showToast('❌ Isi tanggal');
+                return;
+            }
+            if (parsed.error) {
+                showToast('❌ ' + parsed.error);
                 return;
             }
 
             let finance = getFinance();
-            finance.push({ tanggal, jenis, jumlah, dibayar_dengan: dibayarDengan, keterangan });
+            finance.push({
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                tanggal,
+                jenis: parsed.jenis,
+                jumlah: parsed.jumlah,
+                dibayar_dengan: parsed.dibayar_dengan,
+                keterangan: parsed.keterangan
+            });
             setFinance(finance);
 
-            // Jika jenisnya utang_sudah_bayar atau piutang_sudah_bayar, kurangi saldo jika dibayar dengan saldo
-            if ((jenis === 'utang_sudah_bayar' || jenis === 'piutang_sudah_bayar') && dibayarDengan === 'saldo') {
-                let settings = getSettings() || { saldo: 0 };
-                settings.saldo = (settings.saldo || 0) - jumlah;
-                setSettings(settings);
-            }
+            document.getElementById('financeKalimat').value = '';
+            document.getElementById('financePreview').style.display = 'none';
 
-            document.getElementById('financeTanggal').value = '';
-            document.getElementById('financeJenis').value = 'masuk';
-            document.getElementById('financeJumlah').value = '';
-            document.getElementById('financeKeterangan').value = '';
-            document.getElementById('financeDibayarDengan').style.display = 'none';
-
-            showToast('✅ Transaksi berhasil ditambahkan');
+            showToast('✅ Transaksi ditambahkan');
             renderKeuangan();
         });
 
-        window.deleteFinance = function(idx) {
+        window.deleteFinance = function(id) {
+            if (!id) {
+                showToast('❌ Transaksi lama tanpa id. Hapus semua keuangan dulu.');
+                return;
+            }
             if (!confirm('Hapus transaksi ini?')) return;
             let finance = getFinance();
-            finance.splice(idx, 1);
-            setFinance(finance);
+            const next = finance.filter(f => f.id !== id);
+            if (next.length === finance.length) {
+                showToast('❌ Transaksi tidak ketemu');
+                return;
+            }
+            setFinance(next);
             showToast('✅ Transaksi dihapus');
             renderKeuangan();
         };
+
+        document.getElementById('btnResetFinance').addEventListener('click', () => {
+            if (!confirm('Hapus SEMUA catatan keuangan? Absensi tetap aman.')) return;
+            setFinance([]);
+            showToast('✅ Keuangan dikosongkan');
+            renderKeuangan();
+        });
 
         // ============= PASSWORD & LOGOUT =============
         document.getElementById('btnSetPassword').addEventListener('click', () => {
