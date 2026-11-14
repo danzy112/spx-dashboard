@@ -1046,7 +1046,7 @@
                 else if (f.jenis === 'saldo_to_cash') totalSaldoToCash += f.jumlah;
             });
 
-            const saldo = totalMasuk - totalKeluar - totalTabungan - totalBayarUtangSaldo - totalBayarPiutangSaldo;
+            const saldo = totalMasuk - totalKeluar - totalTabungan - totalBayarUtangSaldo - totalBayarPiutangSaldo - totalSaldoToCash;
             const cash = totalCashMasuk - totalCashKeluar + totalSaldoToCash - totalBayarUtangCash - totalBayarPiutangCash;
 
             document.getElementById('financeMasuk').textContent = formatRupiah(totalMasuk);
@@ -1054,8 +1054,8 @@
             document.getElementById('financeSaldo').textContent = formatRupiah(saldo);
             document.getElementById('financeCash').textContent = formatRupiah(cash);
             document.getElementById('financeTabungan').textContent = formatRupiah(totalTabungan);
-            document.getElementById('financeUtang').textContent = formatRupiah(totalUtangBelum + totalUtangSudah);
-            document.getElementById('financePiutang').textContent = formatRupiah(totalPiutangBelum + totalPiutangSudah);
+            document.getElementById('financeUtang').textContent = formatRupiah(totalUtangBelum);
+            document.getElementById('financePiutang').textContent = formatRupiah(totalPiutangBelum);
 
             const tbody = document.getElementById('financeTableBody');
             tbody.innerHTML = '';
