@@ -1107,51 +1107,19 @@
             const low = text.toLowerCase();
             if (!text) return { error: 'Kalimat kosong' };
             const jumlah = parseJumlah(low);
-            if (!jumlah) return { error: 'Jumlah tidak ketemu. Contoh: jajan 10rb cash' };
+            if (!jumlah) return { error: 'Jumlah tidak ketemu' };
 
-            const hasCash = /\bcash\b|\btunai\b/.test(low);
-            const hasSaldo = /\bsaldo\b|\brekening\b|\btransfer\b/.test(low);
-            const bayar = /\bbayar\b|\blunas\b|\bsudah\s*bayar\b|\bsudah\s*dibayar\b/.test(low);
-            const belum = /\bbelum\b/.test(low);
-            const terima = /\bterima\b|\bditerima\b|\bdibayar\s*balik\b/.test(low);
+            let jenis = 'keluar';
+            if (/\b(tarik|pindah|cairkan|ambil)\b/.test(low) && /\bsaldo\b/.test(low)) jenis = 'saldo_to_cash';
+            else if (/\b(tabung|nabung)\b/.test(low)) jenis = 'tabung';
+            else if (/\butang\b/.test(low)) jenis = /\b(bayar|lunas)\b/.test(low) ? 'utang_sudah_bayar' : 'utang_belum_bayar';
+            else if (/\bpiutang\b/.test(low)) jenis = /\b(terima|bayar)\b/.test(low) ? 'piutang_sudah_bayar' : 'piutang_belum_bayar';
+            else if (/\b(gaji|masuk|terima|dapat)\b/.test(low)) jenis = /\bcash\b/.test(low) ? 'cash_masuk' : 'masuk';
+            else if (/\bcash\b/.test(low)) jenis = 'cash_keluar';
 
-            let jenis = null;
-            let dibayar = null;
-            let ket = text;
+            const dibayar = /\bcash\b|\btunai\b/.test(low) ? 'cash' : 'saldo';
 
-            if (/\b(tarik|pindah|cairkan|ambil)\b/.test(low) && /\bsaldo\b/.test(low) && /\bcash\b|\btunai\b/.test(low)) {
-                jenis = 'saldo_to_cash';
-            } else if (/\b(tabung|nabung|tabungan|menabung)\b/.test(low)) {
-                jenis = 'tabung';
-            } else if (/\butang\b/.test(low)) {
-                if (bayar && !belum) {
-                    jenis = 'utang_sudah_bayar';
-                    dibayar = hasSaldo && !hasCash ? 'saldo' : 'cash';
-                } else {
-                    jenis = 'utang_belum_bayar';
-                }
-            } else if (/\bpiutang\b/.test(low)) {
-                if ((terima || bayar) && !belum) {
-                    jenis = 'piutang_sudah_bayar';
-                    dibayar = hasSaldo && !hasCash ? 'saldo' : (hasCash ? 'cash' : 'saldo');
-                } else {
-                    jenis = 'piutang_belum_bayar';
-                }
-            } else if (/\b(gaji|masuk|terima|dapat)\b/.test(low) && !/\b(keluar|jajan|beli|bayar)\b/.test(low)) {
-                jenis = hasCash && !hasSaldo ? 'cash_masuk' : 'masuk';
-            } else if (hasCash && !hasSaldo) {
-                jenis = 'cash_keluar';
-            } else if (hasSaldo && !hasCash) {
-                jenis = 'keluar';
-            } else if (/\b(jajan|makan|beli|keluar|bayar|ongkos|bensin|pulsa)\b/.test(low)) {
-                jenis = 'keluar';
-            } else {
-                return { error: 'Tidak paham. Sebut: gaji/masuk, jajan/keluar + cash atau saldo, utang, piutang, tabung, tarik saldo ke cash' };
-            }
-
-            if (dibayar === null) dibayar = hasCash ? 'cash' : (hasSaldo ? 'saldo' : null);
-
-            return { jenis, jumlah, dibayar_dengan: dibayar, keterangan: ket };
+            return { jenis, jumlah, dibayar_dengan: dibayar, keterangan: text };
         }
 
         function updateFinancePreview() {
