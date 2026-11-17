@@ -701,13 +701,32 @@
             const today = new Date();
             const year = today.getFullYear();
             const month = today.getMonth() + 1;
+            const date = today.getDate();
 
-            const totalHari = absensi.length;
-            const totalUpah = absensi.reduce((sum, a) => sum + (a.upah || 0), 0);
-            const shift1 = absensi.filter(a => a.shift === 'shift 1').length;
-            const shiftM = absensi.filter(a => a.shift === 'middle').length;
-            const shift2 = absensi.filter(a => a.shift === 'shift 2').length;
-            const bulanIni = absensi.filter(a => a.tanggal.substring(0, 7) === `${year}-${String(month).padStart(2, '0')}`).length;
+            // Tentuin pembayaran terakhir (25 atau 10 terakhir yang sudah lewat)
+            let lastPaymentDate;
+            if (date >= 25) {
+                // Pembayaran 25 bulan ini sudah lewat
+                lastPaymentDate = `${year}-${String(month).padStart(2, '0')}-25`;
+            } else if (date >= 10) {
+                // Pembayaran 10 bulan ini sudah lewat
+                lastPaymentDate = `${year}-${String(month).padStart(2, '0')}-10`;
+            } else {
+                // Belum ada pembayaran bulan ini, ambil pembayaran bulan lalu (25 bulan sebelumnya)
+                const prevMonth = month === 1 ? 12 : month - 1;
+                const prevYear = month === 1 ? year - 1 : year;
+                lastPaymentDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-25`;
+            }
+
+            // Filter hanya absensi SETELAH pembayaran terakhir (belum dibayar)
+            const absensiTiakDibayar = absensi.filter(a => a.tanggal > lastPaymentDate);
+            
+            const totalHari = absensiTiakDibayar.length;
+            const totalUpah = absensiTiakDibayar.reduce((sum, a) => sum + (a.upah || 0), 0);
+            const shift1 = absensiTiakDibayar.filter(a => a.shift === 'shift 1').length;
+            const shiftM = absensiTiakDibayar.filter(a => a.shift === 'middle').length;
+            const shift2 = absensiTiakDibayar.filter(a => a.shift === 'shift 2').length;
+            const bulanIni = absensiTiakDibayar.filter(a => a.tanggal.substring(0, 7) === `${year}-${String(month).padStart(2, '0')}`).length;
 
             document.getElementById('statHari').textContent = totalHari;
             document.getElementById('statUpah').textContent = formatRupiah(totalUpah);
@@ -717,7 +736,6 @@
             document.getElementById('statBulanIni').textContent = bulanIni;
 
             const now = new Date();
-            const date = now.getDate();
             let periodStart, periodEnd, payDate, periodLabel;
 
             if (date <= 15) {
