@@ -759,7 +759,10 @@
                 periodLabel = `16-${lastDay} ${now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`;
             }
 
-            const periodData = absensi.filter(a => a.tanggal >= periodStart && a.tanggal <= periodEnd);
+            const periodData = absensi.filter(a => {
+                const aDate = a.tanggal.split('T')[0]; // Ambil YYYY-MM-DD
+                return aDate >= periodStart && aDate <= periodEnd;
+            });
             const periodUpah = periodData.reduce((sum, a) => sum + (a.upah || 0), 0);
 
             document.getElementById('periodInfo').textContent = periodLabel;
