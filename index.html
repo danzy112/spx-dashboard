@@ -702,44 +702,10 @@
             const year = today.getFullYear();
             const month = today.getMonth() + 1;
             const date = today.getDate();
-
-            // Tentuin pembayaran terakhir (25 atau 10 terakhir yang sudah lewat)
-            let lastPaymentDate;
-            if (date >= 25) {
-                // Pembayaran 25 bulan ini sudah lewat
-                lastPaymentDate = `${year}-${String(month).padStart(2, '0')}-25`;
-            } else if (date >= 10) {
-                // Pembayaran 10 bulan ini sudah lewat
-                lastPaymentDate = `${year}-${String(month).padStart(2, '0')}-10`;
-            } else {
-                // Belum ada pembayaran bulan ini, ambil pembayaran bulan lalu (25 bulan sebelumnya)
-                const prevMonth = month === 1 ? 12 : month - 1;
-                const prevYear = month === 1 ? year - 1 : year;
-                lastPaymentDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-25`;
-            }
-
-            // Filter hanya absensi SETELAH pembayaran terakhir (belum dibayar)
-            const absensiTiakDibayar = absensi.filter(a => a.tanggal > lastPaymentDate);
-            
-            const totalHari = absensiTiakDibayar.length;
-            const totalUpah = absensiTiakDibayar.reduce((sum, a) => sum + (a.upah || 0), 0);
-            const shift1 = absensiTiakDibayar.filter(a => a.shift === 'shift 1').length;
-            const shiftM = absensiTiakDibayar.filter(a => a.shift === 'middle').length;
-            const shift2 = absensiTiakDibayar.filter(a => a.shift === 'shift 2').length;
-            const bulanIni = absensiTiakDibayar.filter(a => a.tanggal.substring(0, 7) === `${year}-${String(month).padStart(2, '0')}`).length;
-
-            document.getElementById('statHari').textContent = totalHari;
-            document.getElementById('statUpah').textContent = formatRupiah(totalUpah);
-            document.getElementById('statShift1').textContent = shift1;
-            document.getElementById('statShiftM').textContent = shiftM;
-            document.getElementById('statShift2').textContent = shift2;
-            document.getElementById('statBulanIni').textContent = bulanIni;
-
             const now = new Date();
-            let periodStart, periodEnd, payDate, periodLabel;
 
-            // Logic: Jika hari ini belum lewat tgl 25, tampilkan periode 1-15 (Gajian terdekat)
-            // Jika sudah lewat tgl 25, atau jika hari ini belum lewat tgl 10, tampilkan periode 16-akhir
+            // Tentukan periode kerja berdasar tanggal hari ini
+            let periodStart, periodEnd, payDate, periodLabel;
             
             if (date <= 25) {
                 // Tampilkan periode 1-15 (Bayar tgl 25 bulan ini)
@@ -759,10 +725,27 @@
                 periodLabel = `16-${lastDay} ${now.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`;
             }
 
+            // Filter data di periode berjalan saja
             const periodData = absensi.filter(a => {
                 const aDate = a.tanggal.split('T')[0]; // Ambil YYYY-MM-DD
                 return aDate >= periodStart && aDate <= periodEnd;
             });
+
+            // Statistik dari periode berjalan
+            const totalHari = periodData.length;
+            const totalUpah = periodData.reduce((sum, a) => sum + (a.upah || 0), 0);
+            const shift1 = periodData.filter(a => a.shift === 'shift 1').length;
+            const shiftM = periodData.filter(a => a.shift === 'middle').length;
+            const shift2 = periodData.filter(a => a.shift === 'shift 2').length;
+            const bulanIni = absensi.filter(a => a.tanggal.substring(0, 7) === `${year}-${String(month).padStart(2, '0')}`).length;
+
+            document.getElementById('statHari').textContent = totalHari;
+            document.getElementById('statUpah').textContent = formatRupiah(totalUpah);
+            document.getElementById('statShift1').textContent = shift1;
+            document.getElementById('statShiftM').textContent = shiftM;
+            document.getElementById('statShift2').textContent = shift2;
+            document.getElementById('statBulanIni').textContent = bulanIni;
+
             const periodUpah = periodData.reduce((sum, a) => sum + (a.upah || 0), 0);
 
             document.getElementById('periodInfo').textContent = periodLabel;
